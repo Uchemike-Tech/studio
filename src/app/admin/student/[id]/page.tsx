@@ -78,6 +78,27 @@ export default function StudentDetailsPage() {
       }
     }
   };
+
+  const handleViewDocument = (doc: Document) => {
+    // In a real app, this would link to a secure URL for the document.
+    // For this demo, we'll open a placeholder.
+    if (doc.fileDataUri) {
+      const link = document.createElement('a');
+      link.href = doc.fileDataUri;
+      link.download = doc.name;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } else {
+      // Fallback for older documents without data URI
+      window.open('https://placehold.co/800x1100.png', '_blank');
+      toast({
+        title: 'Viewing Document',
+        description: 'Showing a placeholder as the document URL is not available.',
+        variant: 'default',
+      });
+    }
+  };
   
   const clearanceProgress = student && settings ? Math.min((student.documents.filter(d => d.status === 'Approved').length / settings.requiredDocuments) * 100, 100) : 0;
 
@@ -170,9 +191,13 @@ export default function StudentDetailsPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex flex-wrap justify-end gap-2">
-                            <Button variant="outline" size="sm">
-                               <Download className="mr-2 h-4 w-4" />
-                               View
+                          <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewDocument(doc)}
+                            >
+                              <Download className="mr-2 h-4 w-4" />
+                              View
                             </Button>
                             <Button
                               variant="default"

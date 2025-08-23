@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -97,6 +98,7 @@ export function DocumentUploadForm({
         status: 'Pending', // All new documents are pending admin approval
         submittedAt: new Date(),
         updatedAt: new Date(),
+        fileDataUri: documentDataUri, // Store the data URI
         analysis: {
           summary: result.analysisSummary,
           suggestedStatus: result.suggestedClearanceStatus,
