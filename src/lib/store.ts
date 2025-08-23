@@ -17,7 +17,16 @@ export async function getSettings(): Promise<AppSettings> {
     console.error('Error fetching settings:', error.message || 'An unknown error occurred');
   }
   
-  return data || defaultSettings;
+  // If no settings are found, insert the default settings.
+  if (!data) {
+    const { error: insertError } = await supabase.from('settings').insert(defaultSettings);
+    if (insertError) {
+      console.error('Error inserting default settings:', insertError);
+    }
+    return defaultSettings;
+  }
+  
+  return data;
 }
 
 export async function updateSettings(newSettings: AppSettings): Promise<void> {
