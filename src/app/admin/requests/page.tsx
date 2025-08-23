@@ -59,7 +59,7 @@ export default function AdminRequestsPage() {
           studentId: student.id,
           studentName: student.name,
         }))
-    );
+    ).sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
     setPendingDocuments(pendingDocs);
   }, []);
 
@@ -78,57 +78,59 @@ export default function AdminRequestsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Student</TableHead>
-                <TableHead>Document Name</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="hidden md:table-cell">Submitted At</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {pendingDocuments.length === 0 ? (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="h-24 text-center text-muted-foreground"
-                  >
-                    No pending requests.
-                  </TableCell>
+                  <TableHead>Student</TableHead>
+                  <TableHead>Document Name</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="hidden md:table-cell">Submitted At</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-              ) : (
-                pendingDocuments.map(doc => (
-                  <TableRow key={doc.id}>
-                    <TableCell>
-                      <div className="font-medium">{doc.studentName}</div>
-                      <div className="hidden text-sm text-muted-foreground md:inline">
-                        {doc.studentId}
-                      </div>
-                    </TableCell>
-                    <TableCell>{doc.name}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={cn('gap-x-2', statusColors[doc.status])}>
-                         {statusIcons[doc.status]}
-                         {doc.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {new Date(doc.submittedAt).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                       <Link href={`/admin/student/${doc.studentId}`}>
-                         <Button variant="outline" size="sm">
-                           Review
-                         </Button>
-                       </Link>
+              </TableHeader>
+              <TableBody>
+                {pendingDocuments.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={5}
+                      className="h-24 text-center text-muted-foreground"
+                    >
+                      No pending requests.
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  pendingDocuments.map(doc => (
+                    <TableRow key={doc.id}>
+                      <TableCell>
+                        <div className="font-medium">{doc.studentName}</div>
+                        <div className="hidden text-sm text-muted-foreground md:inline">
+                          {doc.studentId}
+                        </div>
+                      </TableCell>
+                      <TableCell>{doc.name}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className={cn('gap-x-2', statusColors[doc.status])}>
+                           {statusIcons[doc.status]}
+                           {doc.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {new Date(doc.submittedAt).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-right">
+                         <Link href={`/admin/student/${doc.studentId}`}>
+                           <Button variant="outline" size="sm">
+                             Review
+                           </Button>
+                         </Link>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
     </DashboardLayout>

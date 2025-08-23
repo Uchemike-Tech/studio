@@ -19,7 +19,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Activity, Users, CheckCircle, Clock } from 'lucide-react';
-import { ClearanceChart } from './_components/clearance-chart';
 import type { Student, AppSettings } from '@/lib/types';
 import { getAllStudents, getSettings } from '@/lib/store';
 import { Progress } from '@/components/ui/progress';
@@ -56,22 +55,6 @@ export default function AdminDashboardPage() {
     return Math.min((approvedDocs / totalRequiredDocs) * 100, 100);
   };
   
-  const fullyClearedStudents = students.filter(s => getClearanceProgress(s) === 100).length;
-  const inProgressStudents = students.filter(s => {
-    const progress = getClearanceProgress(s);
-    return progress > 0 && progress < 100;
-  }).length;
-  const actionRequiredStudents = students.filter(s => s.documents.some(d => d.status === 'Rejected')).length;
-  const notStartedStudents = students.filter(s => s.documents.length === 0).length;
-
-  const chartData = {
-    fullyCleared: fullyClearedStudents,
-    inProgress: inProgressStudents,
-    actionRequired: actionRequiredStudents,
-    notStarted: notStartedStudents,
-  };
-
-
   const getLatestUpdate = (student: Student) => {
     if (student.documents.length === 0) return 'N/A';
     return new Date(
@@ -118,7 +101,7 @@ export default function AdminDashboardPage() {
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{fullyClearedStudents}</div>
+            <div className="text-2xl font-bold">{students.filter(s => getClearanceProgress(s) === 100).length}</div>
             <p className="text-xs text-muted-foreground">
               students have completed clearance
             </p>
@@ -135,15 +118,15 @@ export default function AdminDashboardPage() {
           </CardContent>
         </Card>
       </div>
-      <div className="grid gap-4 md:gap-8 lg:grid-cols-2">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Recent Clearance Requests</CardTitle>
-            <CardDescription>
-              An overview of the most recent student submissions.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Clearance Activity</CardTitle>
+          <CardDescription>
+            An overview of the most recent student submissions.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -195,20 +178,9 @@ export default function AdminDashboardPage() {
                 )}
               </TableBody>
             </Table>
-          </CardContent>
-        </Card>
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Clearance Status Distribution</CardTitle>
-            <CardDescription>
-              A visual breakdown of current clearance statuses across all students.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="pl-2">
-            <ClearanceChart data={chartData} />
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     </DashboardLayout>
   );
 }

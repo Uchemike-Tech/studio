@@ -11,7 +11,6 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter,
 } from '@/components/ui/card';
 import {
   Table,
@@ -137,69 +136,71 @@ export default function StudentDetailsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Document Name</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Last Updated</TableHead>
-                  <TableHead>AI Suggestion</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {student.documents.length === 0 ? (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center">
-                      No documents submitted yet.
-                    </TableCell>
+                    <TableHead>Document Name</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="hidden sm:table-cell">Last Updated</TableHead>
+                    <TableHead className="hidden md:table-cell">AI Suggestion</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ) : (
-                  student.documents.map((doc) => (
-                    <TableRow key={doc.id}>
-                      <TableCell className="font-medium">{doc.name}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className={cn('gap-x-2', statusColors[doc.status])}>
-                           {statusIcons[doc.status]}
-                           {doc.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{new Date(doc.updatedAt).toLocaleDateString()}</TableCell>
-                      <TableCell>
-                        {doc.analysis?.suggestedStatus || 'N/A'}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button variant="outline" size="sm">
-                             <Download className="mr-2 h-4 w-4" />
-                             View
-                          </Button>
-                          <Button
-                            variant="default"
-                            size="sm"
-                            className="bg-accent text-accent-foreground hover:bg-accent/90"
-                            onClick={() => handleStatusUpdate(doc.id, 'Approved')}
-                            disabled={doc.status === 'Approved'}
-                          >
-                            <CheckCircle className="mr-2 h-4 w-4" />
-                            Approve
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleStatusUpdate(doc.id, 'Rejected')}
-                            disabled={doc.status === 'Rejected'}
-                          >
-                            <XCircle className="mr-2 h-4 w-4" />
-                            Reject
-                          </Button>
-                        </div>
+                </TableHeader>
+                <TableBody>
+                  {student.documents.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-24 text-center">
+                        No documents submitted yet.
                       </TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : (
+                    student.documents.map((doc) => (
+                      <TableRow key={doc.id}>
+                        <TableCell className="font-medium">{doc.name}</TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={cn('gap-x-2', statusColors[doc.status])}>
+                             {statusIcons[doc.status]}
+                             {doc.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="hidden sm:table-cell">{new Date(doc.updatedAt).toLocaleDateString()}</TableCell>
+                        <TableCell className="hidden md:table-cell">
+                          {doc.analysis?.suggestedStatus || 'N/A'}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex flex-wrap justify-end gap-2">
+                            <Button variant="outline" size="sm">
+                               <Download className="mr-2 h-4 w-4" />
+                               View
+                            </Button>
+                            <Button
+                              variant="default"
+                              size="sm"
+                              className="bg-accent text-accent-foreground hover:bg-accent/90"
+                              onClick={() => handleStatusUpdate(doc.id, 'Approved')}
+                              disabled={doc.status === 'Approved'}
+                            >
+                              <CheckCircle className="mr-2 h-4 w-4" />
+                              Approve
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleStatusUpdate(doc.id, 'Rejected')}
+                              disabled={doc.status === 'Rejected'}
+                            >
+                              <XCircle className="mr-2 h-4 w-4" />
+                              Reject
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </div>

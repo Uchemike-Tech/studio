@@ -189,13 +189,13 @@ export default function StudentDashboardPage() {
         </Card>
         <Card
           className={cn(
-            clearanceProgress < 100 &&
-              'flex flex-col items-center justify-center border-dashed bg-muted/50'
+            'flex flex-col items-center justify-center transition-all',
+            clearanceProgress < 100 && 'border-dashed bg-muted/50'
           )}
         >
           {clearanceProgress === 100 ? (
             <>
-              <CardHeader>
+              <CardHeader className="w-full">
                 <CardTitle className="flex items-center gap-2">
                   <QrCode /> Clearance Verified
                 </CardTitle>
@@ -204,7 +204,7 @@ export default function StudentDashboardPage() {
                   verification.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="flex flex-col items-center justify-center gap-4">
+              <CardContent className="flex flex-1 flex-col items-center justify-center gap-4">
                 <Image
                   src="https://placehold.co/200x200.png"
                   alt="QR Code"
@@ -213,7 +213,7 @@ export default function StudentDashboardPage() {
                   data-ai-hint="qr code"
                 />
               </CardContent>
-              <CardFooter>
+              <CardFooter className="w-full">
                 <Button className="w-full">Download Clearance Slip</Button>
               </CardFooter>
             </>
@@ -236,60 +236,62 @@ export default function StudentDashboardPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[120px]">Status</TableHead>
-                <TableHead>Document Name</TableHead>
-                <TableHead>AI Analysis</TableHead>
-                <TableHead className="hidden md:table-cell">
-                  Last Updated
-                </TableHead>
-                <TableHead className="text-right">
-                  <span className="sr-only">Actions</span>
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {student.documents.length === 0 ? (
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="h-24 text-center text-muted-foreground"
-                  >
-                    No documents submitted
-                  </TableCell>
+                  <TableHead className="w-[120px]">Status</TableHead>
+                  <TableHead>Document Name</TableHead>
+                  <TableHead>AI Analysis</TableHead>
+                  <TableHead className="hidden md:table-cell">
+                    Last Updated
+                  </TableHead>
+                  <TableHead className="text-right">
+                    <span className="sr-only">Actions</span>
+                  </TableHead>
                 </TableRow>
-              ) : (
-                student.documents.map((doc) => (
-                  <TableRow key={doc.id}>
-                    <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={cn('gap-2', statusColors[doc.status])}
-                      >
-                        {statusIcons[doc.status]}
-                        {doc.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-medium">{doc.name}</TableCell>
-                    <TableCell className="max-w-xs truncate text-sm text-muted-foreground">
-                      {doc.analysis?.summary ||
-                        'Awaiting submission for analysis.'}
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {doc.updatedAt.toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <Button variant="outline" size="sm" onClick={() => setViewingDocument(doc)}>
-                        View
-                      </Button>
+              </TableHeader>
+              <TableBody>
+                {student.documents.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={5}
+                      className="h-24 text-center text-muted-foreground"
+                    >
+                      No documents submitted
                     </TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ) : (
+                  student.documents.map((doc) => (
+                    <TableRow key={doc.id}>
+                      <TableCell>
+                        <Badge
+                          variant="outline"
+                          className={cn('gap-2', statusColors[doc.status])}
+                        >
+                          {statusIcons[doc.status]}
+                          {doc.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-medium">{doc.name}</TableCell>
+                      <TableCell className="max-w-xs truncate text-sm text-muted-foreground">
+                        {doc.analysis?.summary ||
+                          'Awaiting submission for analysis.'}
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {doc.updatedAt.toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="outline" size="sm" onClick={() => setViewingDocument(doc)}>
+                          View
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </CardContent>
       </Card>
       {viewingDocument && (
@@ -301,4 +303,3 @@ export default function StudentDashboardPage() {
     </DashboardLayout>
   );
 }
-
