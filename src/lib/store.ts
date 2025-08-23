@@ -83,7 +83,7 @@ export async function createStudent(auth_id: string, email: string): Promise<Stu
     const newStudentData = {
         auth_id,
         email,
-        name: 'New Student',
+        name: mockStudent.name,
         documents: []
     };
 
