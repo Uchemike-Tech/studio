@@ -98,7 +98,7 @@ export default function StudentDetailsPage({ params: { id } }: { params: { id: s
 
   const handleViewDocument = (doc: Document) => {
     if (doc.fileUrl) {
-      window.open(doc.fileUrl, '_blank');
+      window.open(doc.fileUrl, '_blank', 'noopener,noreferrer');
     } else {
       toast({
         title: 'Document Unavailable',

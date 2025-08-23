@@ -98,7 +98,9 @@ export default function AdminRequestsPage() {
         title: `Document ${status}`,
         description: `The document has been successfully ${status.toLowerCase()}.`,
       });
-      fetchPendingDocs(); // Refresh the list
+      // Instead of just refreshing the pending list, we need to update the state directly
+      // to avoid race conditions and ensure the UI updates instantly.
+      setPendingDocuments((prevDocs) => prevDocs.filter((d) => d.id !== doc.id));
       setReviewingDoc(null); // Close the dialog
     } catch (error) {
         console.error("Failed to update status:", error);
