@@ -43,50 +43,50 @@ const statusColors: { [key in Document['status']]: string } = {
     'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/50 dark:text-red-300 dark:border-red-800',
 };
 
-export default function StudentDetailsPage({ params: { id } }: { params: { id: string } }) {
+export default function StudentDetailsPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const studentId = Number(id);
   const { toast } = useToast();
 
   const [student, setStudent] = useState<Student | null>(null);
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [studentId, setStudentId] = useState<number | null>(null);
 
-  const fetchStudentData = useCallback(async () => {
-    if (studentId) {
-      try {
-        const studentData = await getStudentById(studentId);
-        if (studentData) {
-          setStudent(studentData);
-        } else {
-          toast({ title: 'Error', description: 'Student not found.', variant: 'destructive' });
-        }
-      } catch (error) {
-        console.error("Failed to fetch student data:", error);
-        toast({ title: 'Error', description: 'Failed to load student details.', variant: 'destructive' });
+  const fetchStudentData = useCallback(async (id: number) => {
+    try {
+      const studentData = await getStudentById(id);
+      if (studentData) {
+        setStudent(studentData);
+      } else {
+        toast({ title: 'Error', description: 'Student not found.', variant: 'destructive' });
       }
+    } catch (error) {
+      console.error("Failed to fetch student data:", error);
+      toast({ title: 'Error', description: 'Failed to load student details.', variant: 'destructive' });
     }
-  }, [studentId, toast]);
+  }, [toast]);
 
 
   useEffect(() => {
-    async function fetchData() {
+    async function fetchData(id: number) {
       setIsLoading(true);
       const appSettings = await getSettings();
       setSettings(appSettings);
-      await fetchStudentData();
+      await fetchStudentData(id);
       setIsLoading(false);
     }
-    if (studentId) {
-        fetchData();
+    if (params.id) {
+        const id = Number(params.id);
+        setStudentId(id);
+        fetchData(id);
     }
-  }, [studentId, fetchStudentData]);
+  }, [params.id, fetchStudentData]);
 
   const handleStatusUpdate = async (docId: string, status: 'Approved' | 'Rejected') => {
     if (student?.id) {
         try {
             await updateDocumentStatus(student.id, docId, status);
-            await fetchStudentData();
+            await fetchStudentData(student.id); // Refetch data
             toast({
               title: `Document ${status}`,
               description: `The document has been successfully ${status.toLowerCase()}.`,
