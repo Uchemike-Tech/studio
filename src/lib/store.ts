@@ -10,30 +10,20 @@ export async function getSettings(): Promise<AppSettings> {
     .eq('id', 1)
     .single();
 
-  if (error && error.code !== 'PGRST116') { // PGRST116: "object not found"
-    console.error('Error fetching settings:', error.message || 'An unknown error occurred');
-    // Don't throw, proceed to return default settings as a fallback.
-  }
-
+  // If we get data, return it.
   if (data) {
     return data;
-  } else {
-    // If settings don't exist in the DB, return a default object.
-    // The admin settings page will handle the initial creation.
-    const defaultSettings: AppSettings = { id: 1, requiredDocuments: 6 };
-    
-    // Attempt to create them for the first time.
-    const { error: insertError } = await supabase
-      .from('settings')
-      .insert(defaultSettings, { onConflict: 'id' });
-      
-    if (insertError) {
-      console.error('Error inserting default settings:', insertError.message);
-      // If insertion fails, return the default object anyway to prevent app crash
-      return defaultSettings;
-    }
-    return defaultSettings;
   }
+
+  if (error && error.code !== 'PGRST116') { // PGRST116 means "object not found"
+    // Log any other errors, but don't crash the app.
+    console.error('Error fetching settings:', error.message || 'An unknown error occurred');
+  }
+
+  // If no data is found or an error occurs, return a safe default.
+  // The admin settings page is responsible for creating/updating the actual record in the DB.
+  const defaultSettings: AppSettings = { id: 1, requiredDocuments: 6 };
+  return defaultSettings;
 }
 
 export async function updateSettings(newSettings: AppSettings): Promise<void> {
