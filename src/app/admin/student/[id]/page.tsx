@@ -22,11 +22,12 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { getStudent, updateDocumentStatus, getSettings } from '@/lib/store';
+import { updateDocumentStatus, getSettings } from '@/lib/store';
 import type { Student, Document, AppSettings } from '@/lib/types';
 import { ArrowLeft, CheckCircle, Clock, XCircle, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
+import { supabase } from '@/lib/supabase-client';
 
 const statusIcons = {
   Approved: <CheckCircle className="h-4 w-4 text-green-600" />,
@@ -56,9 +57,10 @@ export default function StudentDetailsPage() {
   const fetchStudentData = useCallback(async () => {
     if (typeof id === 'string') {
       try {
-        const studentData = await getStudent(id);
-        if (studentData) {
-          setStudent(studentData);
+        const { data, error } = await supabase.from('students').select('*').eq('id', id).single();
+        if (error) throw error;
+        if (data) {
+          setStudent(data);
         } else {
           toast({ title: 'Error', description: 'Student not found.', variant: 'destructive' });
         }

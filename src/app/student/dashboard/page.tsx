@@ -64,7 +64,7 @@ export default function StudentDashboardPage() {
     async function fetchInitialData() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
+        if (!session || !session.user.email) {
             toast({
                 title: 'Not Authenticated',
                 description: 'You must be logged in to view this page.',
@@ -73,10 +73,10 @@ export default function StudentDashboardPage() {
             setIsLoading(false);
             return;
         }
-        const studentId = session.user.id;
+        const userEmail = session.user.email;
 
         const [studentData, settingsData] = await Promise.all([
-          getStudent(studentId),
+          getStudent(userEmail),
           getSettings(),
         ]);
         

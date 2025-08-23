@@ -48,20 +48,20 @@ export async function updateSettings(newSettings: AppSettings): Promise<void> {
 }
 
 // --- Students ---
-export async function getStudent(id: string): Promise<Student | undefined> {
-  if (!id) {
-    console.error('getStudent called with no ID.');
+export async function getStudent(email: string): Promise<Student | undefined> {
+  if (!email) {
+    console.error('getStudent called with no email.');
     return undefined;
   }
   
   const { data, error } = await supabase
     .from('students')
     .select('*')
-    .eq('id', id)
+    .eq('email', email)
     .single();
 
   if (error && error.code !== 'PGRST116') {
-      console.error(`Error getting student with ID ${id}:`, error.message);
+      console.error(`Error getting student with email ${email}:`, error.message);
   }
   
   if (data) {
@@ -81,8 +81,7 @@ export async function updateStudent(student: Student): Promise<void> {
     }
     const { error } = await supabase
       .from('students')
-      .upsert(student)
-      .eq('id', student.id);
+      .upsert(student);
 
     if (error) {
         console.error('Error updating student:', error);
@@ -101,10 +100,13 @@ export async function getAllStudents(): Promise<Student[]> {
 
 
 export async function updateDocumentStatus(studentId: string, docId: string, status: 'Approved' | 'Rejected'): Promise<Student | undefined> {
-    const student = await getStudent(studentId);
-    if (!student) return undefined;
+    const { data: student, error: getStudentError } = await supabase.from('students').select('*').eq('id', studentId).single();
+    if (getStudentError || !student) {
+        console.error(`Could not retrieve student ${studentId} to update document status.`);
+        return undefined;
+    };
 
-    const docIndex = student.documents.findIndex(d => d.id === docId);
+    const docIndex = student.documents.findIndex((d: Document) => d.id === docId);
     if (docIndex === -1) return undefined;
     
     const updatedDocuments = [...student.documents];
@@ -121,5 +123,7 @@ export async function updateDocumentStatus(studentId: string, docId: string, sta
         throw error;
     }
     
-    return getStudent(studentId);
+    const { data: updatedStudent } = await supabase.from('students').select('*').eq('id', studentId).single();
+
+    return updatedStudent;
 }
