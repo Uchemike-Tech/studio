@@ -18,6 +18,8 @@ export async function getSettings(): Promise<AppSettings> {
     return defaultSettings;
   }
   
+  // If no settings exist in the DB, return the hardcoded default.
+  // The admin settings page will handle the initial creation on first save.
   return data || defaultSettings;
 }
 
@@ -99,14 +101,15 @@ export async function createStudent(auth_id: string, email: string): Promise<Stu
 
 
 export async function updateStudent(student: Student): Promise<void> {
-    if (!student.id) {
-      console.error("updateStudent called without a student ID.");
+    if (!student.auth_id) {
+      console.error("updateStudent called without a student auth_id.");
       return;
     }
+    // We must use auth_id for the update to comply with RLS policies.
     const { error } = await supabase
       .from('students')
       .update(student)
-      .eq('id', student.id);
+      .eq('auth_id', student.auth_id);
 
     if (error) {
         console.error('Error updating student:', error);
@@ -138,6 +141,7 @@ export async function updateDocumentStatus(studentId: number, docId: string, sta
     updatedDocuments[docIndex].status = status;
     updatedDocuments[docIndex].updatedAt = new Date().toISOString();
 
+    // Use the student's auth_id for the update operation
     await updateStudent({ ...student, documents: updatedDocuments });
     
     return await getStudentById(studentId);
