@@ -64,13 +64,13 @@ export default function StudentDetailsPage() {
 
   const handleStatusUpdate = (docId: string, status: 'Approved' | 'Rejected') => {
     if (typeof id === 'string') {
-      const updatedStudent = updateDocumentStatus(id, docId, status);
+      updateDocumentStatus(id, docId, status);
+      const updatedStudent = getStudent(id); // Re-fetch student to get the latest data
       if (updatedStudent) {
-        setStudent({ ...updatedStudent }); // Force re-render with updated data
+        setStudent(updatedStudent);
         toast({
           title: `Document ${status}`,
           description: `The document has been successfully ${status.toLowerCase()}.`,
-          className: status === 'Approved' ? 'bg-accent text-accent-foreground' : 'bg-destructive text-destructive-foreground',
         });
       }
     }

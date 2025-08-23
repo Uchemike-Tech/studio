@@ -56,7 +56,7 @@ export function DashboardLayout({ children, userType }: DashboardLayoutProps) {
 
   const adminNavItems: NavItem[] = [
     { href: '/admin/dashboard', icon: Home, label: 'Dashboard' },
-    { href: '/admin/requests', icon: Users, label: 'Requests', badge: 12 },
+    { href: '/admin/requests', icon: Users, label: 'Requests' },
     { href: '/admin/analytics', icon: LineChart, label: 'Analytics' },
     { href: '/admin/settings', icon: Settings, label: 'Settings' },
   ];
@@ -65,11 +65,7 @@ export function DashboardLayout({ children, userType }: DashboardLayoutProps) {
 
   const NavLink = ({ href, icon: Icon, label, badge }: NavItem) => (
     <Link
-      href="#"
-      onClick={(e) => {
-        e.preventDefault();
-        router.push(href);
-      }}
+      href={href}
       className={cn(
         'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary',
         pathname === href && 'bg-muted text-primary'
