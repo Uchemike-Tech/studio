@@ -1,5 +1,3 @@
-// In-memory data store for prototyping purposes.
-// In a real application, this would be replaced with a proper database.
 
 import {
   doc,
@@ -61,16 +59,10 @@ export async function getStudent(id: string): Promise<Student | undefined> {
   if (docSnap.exists()) {
     return convertTimestamps(docSnap.data()) as Student;
   }
-  // If student doesn't exist, create one based on mock data
-  // This is a "just-in-time" user creation for the demo
-  if (id === 'FUTO/2024/00000') {
-    const newStudentData = {
-        ...mockStudent,
-        id: 'FUTO/2024/00000',
-        email: 'student@futo.edu.ng'
-    };
-    await setDoc(docRef, newStudentData);
-    return newStudentData;
+  
+  if (id === mockStudent.id) {
+     await setDoc(docRef, mockStudent);
+     return mockStudent;
   }
 
   return undefined;
@@ -107,7 +99,7 @@ export async function updateDocumentStatus(studentId: string, docId: string, sta
     updatedDocuments[docIndex].updatedAt = new Date();
 
     const studentRef = doc(db, 'students', studentId);
-    await updateDoc(studentRef, { documents: updatedDocuments });
+await updateDoc(studentRef, { documents: updatedDocuments });
     
     return getStudent(studentId);
 }

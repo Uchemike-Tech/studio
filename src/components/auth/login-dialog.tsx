@@ -15,6 +15,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LogIn } from 'lucide-react';
 import React from 'react';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { getStudent, updateStudent } from '@/lib/store';
+import { mockStudent } from '@/lib/mock-data';
+import { useToast } from '@/hooks/use-toast';
+
 
 interface LoginDialogProps {
   userType: 'student' | 'admin';
@@ -23,15 +28,40 @@ interface LoginDialogProps {
 export function LoginDialog({ userType }: LoginDialogProps) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
+  const [email, setEmail] = React.useState(userType === 'student' ? 'student@futo.edu.ng' : 'admin@futo.edu.ng');
+  const [password, setPassword] = React.useState('password');
+  const { toast } = useToast();
 
-  const handleLogin = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // In a real app, you'd have auth logic here.
-    // For this demo, we'll just navigate to the respective dashboard.
-    const path =
-      userType === 'student' ? '/student/dashboard' : '/admin/dashboard';
-    router.push(path);
-    setOpen(false); // Close dialog on navigation
+    const auth = getAuth();
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      if (user) {
+         if (userType === 'student') {
+            const studentId = 'FUTO/2024/00000';
+            let student = await getStudent(studentId);
+            if (!student) {
+                const newStudent = { ...mockStudent };
+                await updateStudent(newStudent);
+            }
+         }
+        const path =
+          userType === 'student' ? '/student/dashboard' : '/admin/dashboard';
+        router.push(path);
+        setOpen(false); // Close dialog on navigation
+      }
+
+    } catch (error: any) {
+        console.error("Login failed:", error);
+        toast({
+            title: 'Login Failed',
+            description: error.message,
+            variant: 'destructive'
+        })
+    }
   };
 
   const title = userType === 'student' ? 'Student Login' : 'Admin Login';
@@ -62,11 +92,8 @@ export function LoginDialog({ userType }: LoginDialogProps) {
               <Input
                 id={`${userType}-email`}
                 type="email"
-                defaultValue={
-                  userType === 'student'
-                    ? 'student@futo.edu.ng'
-                    : 'admin@futo.edu.ng'
-                }
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="col-span-3"
                 required
               />
@@ -78,7 +105,8 @@ export function LoginDialog({ userType }: LoginDialogProps) {
               <Input
                 id={`${userType}-password`}
                 type="password"
-                defaultValue="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="col-span-3"
                 required
               />

@@ -4,8 +4,6 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
 
-// IMPORTANT: This is a temporary solution for the demo environment.
-// In a real application, these keys should be stored in environment variables.
 const firebaseConfig = {
   apiKey: "AIzaSyCf_lZafZ-z6dV-VPx6JXeYL37JEFHYkOY",
   authDomain: "futo-clearance-portal.firebaseapp.com",
