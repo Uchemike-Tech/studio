@@ -19,6 +19,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Loader2, Sparkles } from 'lucide-react';
+import type { Document } from '@/lib/types';
 
 const formSchema = z.object({
   documentFile: z
@@ -41,6 +42,7 @@ type FormValues = z.infer<typeof formSchema>;
 
 interface DocumentUploadFormProps {
   studentId: string;
+  onDocumentUpload: (document: Document) => void;
 }
 
 const fileToDataUri = (file: File): Promise<string> =>
@@ -51,7 +53,10 @@ const fileToDataUri = (file: File): Promise<string> =>
     reader.readAsDataURL(file);
   });
 
-export function DocumentUploadForm({ studentId }: DocumentUploadFormProps) {
+export function DocumentUploadForm({
+  studentId,
+  onDocumentUpload,
+}: DocumentUploadFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<{
     suggestedClearanceStatus: string;
@@ -85,9 +90,24 @@ export function DocumentUploadForm({ studentId }: DocumentUploadFormProps) {
       });
 
       setAnalysisResult(result);
+
+      const newDocument: Document = {
+        id: `doc_${Date.now()}`,
+        name: file.name,
+        status: 'Pending', // All new documents are pending admin approval
+        submittedAt: new Date(),
+        updatedAt: new Date(),
+        analysis: {
+          summary: result.analysisSummary,
+          suggestedStatus: result.suggestedClearanceStatus,
+        },
+      };
+
+      onDocumentUpload(newDocument);
+
       toast({
         title: 'Analysis Complete!',
-        description: `AI suggests status: ${result.suggestedClearanceStatus}`,
+        description: 'Your document has been submitted for review.',
         variant: 'default',
         className: 'bg-accent text-accent-foreground border-accent',
       });
@@ -176,7 +196,7 @@ export function DocumentUploadForm({ studentId }: DocumentUploadFormProps) {
             <p>{analysisResult.analysisSummary}</p>
             <p className="mt-2 text-xs text-muted-foreground">
               Note: This is an AI suggestion. An admin will perform the final
-              review.
+              review. Your document has been submitted with a 'Pending' status.
             </p>
           </AlertDescription>
         </Alert>

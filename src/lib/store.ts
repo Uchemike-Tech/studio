@@ -1,0 +1,29 @@
+// In-memory data store for prototyping purposes.
+// In a real application, this would be replaced with a proper database.
+
+import type { Student } from './types';
+
+const students: { [id: string]: Student } = {
+  'FUTO/2024/00000': {
+    id: 'FUTO/2024/00000',
+    name: 'Student',
+    email: 'student@futo.edu.ng',
+    clearanceProgress: 0,
+    documents: [],
+  },
+};
+
+export function getStudent(id: string): Student | undefined {
+  // Return a copy to prevent direct mutation
+  return students[id] ? { ...students[id] } : undefined;
+}
+
+export function updateStudent(student: Student): void {
+  if (students[student.id]) {
+    students[student.id] = student;
+  }
+}
+
+export function getAllStudents(): Student[] {
+  return Object.values(students).map(s => ({...s}));
+}

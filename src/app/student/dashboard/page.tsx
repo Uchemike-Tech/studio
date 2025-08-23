@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/dashboard/layout';
 import {
   Card,
@@ -29,6 +32,7 @@ import {
 } from 'lucide-react';
 import { DocumentUploadForm } from './_components/document-upload-form';
 import Image from 'next/image';
+import { getStudent, updateStudent } from '@/lib/store';
 
 const statusIcons = {
   Approved: <CheckCircle className="h-4 w-4 text-green-600" />,
@@ -37,20 +41,58 @@ const statusIcons = {
 };
 
 const statusColors: { [key in Document['status']]: string } = {
-  Approved: 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/50 dark:text-green-300 dark:border-green-800',
-  Pending: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/50 dark:text-yellow-300 dark:border-yellow-800',
-  Rejected: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/50 dark:text-red-300 dark:border-red-800',
-};
-
-const student: Student = {
-  id: 'FUTO/2024/00000',
-  name: 'Student',
-  email: 'student@futo.edu.ng',
-  clearanceProgress: 0,
-  documents: [],
+  Approved:
+    'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/50 dark:text-green-300 dark:border-green-800',
+  Pending:
+    'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/50 dark:text-yellow-300 dark:border-yellow-800',
+  Rejected:
+    'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/50 dark:text-red-300 dark:border-red-800',
 };
 
 export default function StudentDashboardPage() {
+  const [student, setStudent] = useState<Student | null>(null);
+
+  useEffect(() => {
+    // Fetch initial student data
+    const studentData = getStudent('FUTO/2024/00000');
+    setStudent(studentData);
+  }, []);
+
+  const handleDocumentUpload = (newDocument: Document) => {
+    if (student) {
+      const updatedStudent: Student = {
+        ...student,
+        documents: [...student.documents, newDocument],
+      };
+      // In a real app, this would be an API call
+      updateStudent(updatedStudent);
+      setStudent(updatedStudent);
+    }
+  };
+
+  if (!student) {
+    return (
+      <DashboardLayout userType="student">
+        <div>Loading student data...</div>
+      </DashboardLayout>
+    );
+  }
+
+  const approvedDocs = student.documents.filter(
+    (d) => d.status === 'Approved'
+  ).length;
+  const pendingDocs = student.documents.filter(
+    (d) => d.status === 'Pending'
+  ).length;
+  const rejectedDocs = student.documents.filter(
+    (d) => d.status === 'Rejected'
+  ).length;
+  const totalRequiredDocs = 6;
+  const clearanceProgress = Math.min(
+    (approvedDocs / totalRequiredDocs) * 100,
+    100
+  );
+
   return (
     <DashboardLayout userType="student">
       <div className="flex items-center">
@@ -61,18 +103,20 @@ export default function StudentDashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Clearance Progress</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Clearance Progress
+            </CardTitle>
             <span className="text-2xl font-bold text-primary">
-              {student.clearanceProgress}%
+              {clearanceProgress.toFixed(0)}%
             </span>
           </CardHeader>
           <CardContent>
             <Progress
-              value={student.clearanceProgress}
-              aria-label={`${student.clearanceProgress}% clearance complete`}
+              value={clearanceProgress}
+              aria-label={`${clearanceProgress}% clearance complete`}
             />
             <CardDescription className="pt-2 text-xs text-muted-foreground">
-              {student.clearanceProgress === 100
+              {clearanceProgress === 100
                 ? 'Congratulations! Your clearance is complete.'
                 : 'Keep uploading required documents to proceed.'}
             </CardDescription>
@@ -80,15 +124,15 @@ export default function StudentDashboardPage() {
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Documents Approved</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Documents Approved
+            </CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {student.documents.filter((d) => d.status === 'Approved').length}
-            </div>
+            <div className="text-2xl font-bold">{approvedDocs}</div>
             <p className="text-xs text-muted-foreground">
-              out of 6 total required
+              out of {totalRequiredDocs} total required
             </p>
           </CardContent>
         </Card>
@@ -98,9 +142,7 @@ export default function StudentDashboardPage() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {student.documents.filter((d) => d.status === 'Pending').length}
-            </div>
+            <div className="text-2xl font-bold">{pendingDocs}</div>
             <p className="text-xs text-muted-foreground">
               documents are awaiting admin approval
             </p>
@@ -112,9 +154,7 @@ export default function StudentDashboardPage() {
             <XCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {student.documents.filter((d) => d.status === 'Rejected').length}
-            </div>
+            <div className="text-2xl font-bold">{rejectedDocs}</div>
             <p className="text-xs text-muted-foreground">
               documents were rejected
             </p>
@@ -134,16 +174,19 @@ export default function StudentDashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <DocumentUploadForm studentId={student.id} />
+            <DocumentUploadForm
+              studentId={student.id}
+              onDocumentUpload={handleDocumentUpload}
+            />
           </CardContent>
         </Card>
         <Card
           className={cn(
-            student.clearanceProgress < 100 &&
+            clearanceProgress < 100 &&
               'flex flex-col items-center justify-center border-dashed bg-muted/50'
           )}
         >
-          {student.clearanceProgress === 100 ? (
+          {clearanceProgress === 100 ? (
             <>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -224,7 +267,8 @@ export default function StudentDashboardPage() {
                     </TableCell>
                     <TableCell className="font-medium">{doc.name}</TableCell>
                     <TableCell className="max-w-xs truncate text-sm text-muted-foreground">
-                      {doc.analysis?.summary || 'Awaiting submission for analysis.'}
+                      {doc.analysis?.summary ||
+                        'Awaiting submission for analysis.'}
                     </TableCell>
                     <TableCell className="hidden md:table-cell">
                       {doc.updatedAt.toLocaleDateString()}
