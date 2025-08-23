@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useRouter } from 'next/navigation';
@@ -16,7 +17,6 @@ import { Label } from '@/components/ui/label';
 import { LogIn } from 'lucide-react';
 import React from 'react';
 import { getStudent } from '@/lib/store';
-import { mockStudent } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase-client';
 
@@ -29,38 +29,65 @@ export function LoginDialog({ userType }: LoginDialogProps) {
   const [open, setOpen] = React.useState(false);
   const [email, setEmail] = React.useState(userType === 'student' ? 'student@futo.edu.ng' : 'admin@futo.edu.ng');
   const [password, setPassword] = React.useState('password');
+  const [isLoading, setIsLoading] = React.useState(false);
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsLoading(true);
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // First, try to sign in
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-      if (error) throw error;
+      if (signInError) {
+        // If sign-in fails because the user doesn't exist, try to sign them up
+        if (signInError.message.includes('Invalid login credentials')) {
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email,
+            password,
+          });
 
-      if (data.user) {
-         if (userType === 'student') {
-            const studentId = 'FUTO/2024/00000';
-            // Check if student exists, if not, getStudent will create it.
-            await getStudent(studentId);
-         }
-        const path =
-          userType === 'student' ? '/student/dashboard' : '/admin/dashboard';
-        router.push(path);
-        setOpen(false); // Close dialog on navigation
+          if (signUpError) {
+            // If sign-up also fails, throw the sign-up error
+            throw signUpError;
+          }
+          
+          // If sign up is successful, we can proceed
+          if (!signUpData.user) {
+            throw new Error("Sign up successful, but no user data returned. Please check your Supabase email confirmation settings.")
+          }
+
+        } else {
+          // If the sign-in error is not "Invalid login credentials", throw it
+          throw signInError;
+        }
       }
 
+      // If sign-in or sign-up is successful, proceed
+      if (userType === 'student') {
+        const studentId = 'FUTO/2024/00000';
+        // This will create the student record in the 'students' table if it doesn't exist.
+        await getStudent(studentId);
+      }
+
+      const path =
+        userType === 'student' ? '/student/dashboard' : '/admin/dashboard';
+      router.push(path);
+      setOpen(false);
+
     } catch (error: any) {
-        console.error("Login failed:", error);
-        toast({
-            title: 'Login Failed',
-            description: error.message || 'An unexpected error occurred.',
-            variant: 'destructive'
-        })
+      console.error("Login/Signup failed:", error);
+      toast({
+        title: 'Authentication Failed',
+        description: error.message || 'An unexpected error occurred.',
+        variant: 'destructive',
+      });
+    } finally {
+        setIsLoading(false);
     }
   };
 
@@ -96,6 +123,7 @@ export function LoginDialog({ userType }: LoginDialogProps) {
                 onChange={(e) => setEmail(e.target.value)}
                 className="col-span-3"
                 required
+                disabled={isLoading}
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
@@ -109,13 +137,23 @@ export function LoginDialog({ userType }: LoginDialogProps) {
                 onChange={(e) => setPassword(e.target.value)}
                 className="col-span-3"
                 required
+                disabled={isLoading}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button type="submit">
-              <LogIn className="mr-2 h-4 w-4" />
-              Login
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <LogIn className="mr-2 h-4 w-4 animate-spin" />
+                  Please wait...
+                </>
+              ) : (
+                <>
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Login
+                </>
+              )}
             </Button>
           </DialogFooter>
         </form>
