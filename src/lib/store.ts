@@ -7,7 +7,7 @@ export async function getSettings(): Promise<AppSettings> {
   const { data, error } = await supabase
     .from('settings')
     .select('*')
-    .eq('id', 'app')
+    .eq('id', 1)
     .single();
 
   if (error && error.code !== 'PGRST116') { // PGRST116: "object not found"
@@ -19,19 +19,19 @@ export async function getSettings(): Promise<AppSettings> {
     return data;
   } else {
     // If settings don't exist, create and return them.
-    const defaultSettings: AppSettings = { requiredDocuments: 6 };
+    const defaultSettings: AppSettings = { id: 1, requiredDocuments: 6 };
     const { data: insertedData, error: insertError } = await supabase
       .from('settings')
-      .insert({ id: 'app', ...defaultSettings })
+      .insert(defaultSettings)
       .select()
       .single();
       
     if (insertError) {
       console.error('Error inserting default settings:', insertError.message);
       // If insertion fails, return the default object anyway to prevent app crash
-      return defaultSettings;
+      return { requiredDocuments: 6 };
     }
-    return insertedData || defaultSettings;
+    return insertedData || { requiredDocuments: 6 };
   }
 }
 
@@ -39,7 +39,7 @@ export async function updateSettings(newSettings: AppSettings): Promise<void> {
   const { error } = await supabase
     .from('settings')
     .update(newSettings)
-    .eq('id', 'app');
+    .eq('id', 1);
 
   if (error) {
     console.error('Error updating settings:', error);
@@ -114,4 +114,3 @@ export async function updateDocumentStatus(studentId: string, docId: string, sta
     
     return getStudent(studentId);
 }
-

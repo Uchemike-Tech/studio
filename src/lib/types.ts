@@ -21,6 +21,6 @@ export interface Student {
 }
 
 export interface AppSettings {
-  id?: string; // Supabase needs an identifier
+  id?: number; // Supabase needs an identifier, should be a number
   requiredDocuments: number;
 }
