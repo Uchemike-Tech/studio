@@ -36,6 +36,7 @@ import Image from 'next/image';
 import { getStudent, updateStudent, getSettings } from '@/lib/store';
 import { ViewDocumentDialog } from './_components/view-document-dialog';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/lib/supabase-client';
 
 const statusIcons = {
   Approved: <CheckCircle className="h-4 w-4 text-green-600" />,
@@ -60,8 +61,17 @@ export default function StudentDashboardPage() {
 
   useEffect(() => {
     async function fetchInitialData() {
-      // In a real app, you'd get the logged-in user's ID
-      const studentId = 'FUTO/2024/00000';
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+          toast({
+              title: 'Not Authenticated',
+              description: 'You must be logged in to view this page.',
+              variant: 'destructive',
+          });
+          return;
+      }
+      const studentId = session.user.id;
+
       try {
         const [studentData, settingsData] = await Promise.all([
           getStudent(studentId),
@@ -210,7 +220,7 @@ export default function StudentDashboardPage() {
           </CardHeader>
           <CardContent>
             <DocumentUploadForm
-              studentId={student.id}
+              studentId={student.id!}
               onDocumentUpload={handleDocumentUpload}
             />
           </CardContent>

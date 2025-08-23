@@ -52,7 +52,6 @@ export async function getStudent(id: string): Promise<Student | undefined> {
 
   if (error && error.code !== 'PGRST116') {
       console.error('Error getting student:', error.message);
-      throw error;
   }
   
   if (data) {

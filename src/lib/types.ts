@@ -13,7 +13,7 @@ export interface Document {
 }
 
 export interface Student {
-  id: string;
+  id?: string; // The user's auth ID from Supabase
   name: string;
   email: string;
   clearanceProgress: number;

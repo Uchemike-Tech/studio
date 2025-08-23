@@ -62,7 +62,11 @@ export function LoginDialog({ userType }: LoginDialogProps) {
           
           // If this is the demo student, create their record in the database
           if (userType === 'student' && signUpData.user) {
-              const { error: insertError } = await supabase.from('students').insert(mockStudent);
+              const { error: insertError } = await supabase.from('students').insert({
+                ...mockStudent,
+                id: signUpData.user.id, // Use the auth user's ID
+                email: signUpData.user.email, // Use the auth user's email
+              });
               if (insertError) {
                   // Ignore unique constraint violation if student already exists
                   if (insertError.code !== '23505') { 

@@ -1,9 +1,8 @@
 import type { Student } from './types';
 
-export const mockStudent: Student = {
-  id: 'FUTO/2024/00000',
+// The ID and email will be dynamically set from Supabase Auth
+export const mockStudent: Omit<Student, 'id' | 'email'> = {
   name: 'Demo Student',
-  email: 'student@futo.edu.ng',
   clearanceProgress: 0,
   documents: [],
 };
