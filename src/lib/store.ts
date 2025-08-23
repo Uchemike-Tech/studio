@@ -29,9 +29,9 @@ export async function getSettings(): Promise<AppSettings> {
     if (insertError) {
       console.error('Error inserting default settings:', insertError.message);
       // If insertion fails, return the default object anyway to prevent app crash
-      return { requiredDocuments: 6 };
+      return { id: 1, requiredDocuments: 6 };
     }
-    return insertedData || { requiredDocuments: 6 };
+    return insertedData || { id: 1, requiredDocuments: 6 };
   }
 }
 
@@ -49,6 +49,11 @@ export async function updateSettings(newSettings: AppSettings): Promise<void> {
 
 // --- Students ---
 export async function getStudent(id: string): Promise<Student | undefined> {
+  if (!id) {
+    console.error('getStudent called with no ID.');
+    return undefined;
+  }
+  
   const { data, error } = await supabase
     .from('students')
     .select('*')
@@ -56,7 +61,7 @@ export async function getStudent(id: string): Promise<Student | undefined> {
     .single();
 
   if (error && error.code !== 'PGRST116') {
-      console.error('Error getting student:', error.message);
+      console.error(`Error getting student with ID ${id}:`, error.message);
   }
   
   if (data) {
@@ -70,6 +75,10 @@ export async function getStudent(id: string): Promise<Student | undefined> {
 }
 
 export async function updateStudent(student: Student): Promise<void> {
+    if (!student.id) {
+      console.error("updateStudent called without a student ID.");
+      return;
+    }
     const { error } = await supabase
       .from('students')
       .upsert(student)
