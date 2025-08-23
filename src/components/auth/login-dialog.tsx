@@ -38,7 +38,7 @@ export function LoginDialog({ userType }: LoginDialogProps) {
 
     try {
       // First, try to sign in
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+      const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -61,18 +61,16 @@ export function LoginDialog({ userType }: LoginDialogProps) {
           }
           
           // If this is the demo student, create their record in the database
-          if (userType === 'student' && signUpData.user) {
-              const { error: insertError } = await supabase.from('students').insert({
+          if (userType === 'student' && signUpData.user?.email) {
+              const { error: upsertError } = await supabase.from('students').upsert({
                 ...mockStudent,
                 id: signUpData.user.id, // Use the auth user's ID
                 email: signUpData.user.email, // Use the auth user's email
-              });
-              if (insertError) {
-                  // Ignore unique constraint violation if student already exists
-                  if (insertError.code !== '23505') { 
-                    console.error("Failed to create student record:", insertError);
-                    throw new Error("Could not create the initial student record.");
-                  }
+              }, { onConflict: 'email' });
+
+              if (upsertError) {
+                  console.error("Failed to create student record:", upsertError);
+                  throw new Error("Could not create the initial student record.");
               }
           }
 
