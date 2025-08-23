@@ -5,6 +5,8 @@ import { mockStudent } from './mock-data';
 
 // --- Settings ---
 export async function getSettings(): Promise<AppSettings> {
+  // This is the default settings object that will be returned if no settings are found in the database.
+  // The settings page in the admin dashboard is responsible for creating the first record.
   const defaultSettings: AppSettings = { id: 1, requiredDocuments: 6 };
 
   const { data, error } = await supabase
@@ -15,21 +17,11 @@ export async function getSettings(): Promise<AppSettings> {
 
   if (error && error.code !== 'PGRST116') { // PGRST116 = "object not found"
     console.error('Error fetching settings:', error.message || 'An unknown error occurred');
-    // If there's an actual error (not just 'not found'), return defaults to prevent crash
+    // If there's an actual error (not just 'not found'), return defaults to prevent a crash.
     return defaultSettings;
   }
   
-  // If no data is found (first run), return defaults. The admin settings page will handle creation.
-  if (!data) {
-    const { error: insertError } = await supabase.from('settings').insert(defaultSettings);
-      if (insertError) {
-        console.error('Error inserting default settings:', insertError.message);
-        // If insertion fails, return the default object anyway to prevent app crash
-        return defaultSettings;
-      }
-      return defaultSettings;
-  }
-
+  // If no data is found (e.g., first run), return the default settings object.
   return data || defaultSettings;
 }
 
@@ -46,20 +38,20 @@ export async function updateSettings(newSettings: AppSettings): Promise<void> {
 }
 
 // --- Students ---
-export async function getStudent(email: string): Promise<Student | undefined> {
-  if (!email) {
-    console.error('getStudent called with no email.');
+export async function getStudent(id: string): Promise<Student | undefined> {
+  if (!id) {
+    console.error('getStudent called with no user ID.');
     return undefined;
   }
   
   const { data, error } = await supabase
     .from('students')
     .select('*')
-    .eq('email', email)
+    .eq('id', id)
     .single();
 
   if (error && error.code !== 'PGRST116') {
-      console.error(`Error getting student with email ${email}:`, error.message);
+      console.error(`Error getting student with ID ${id}:`, error.message);
   }
   
   if (data) {
@@ -74,10 +66,10 @@ export async function getStudent(email: string): Promise<Student | undefined> {
 
 
 export async function createStudent(id: string, email: string): Promise<Student> {
-  const newStudentData: Student = {
-    ...mockStudent,
+  const newStudentData: Omit<Student, 'documents' | 'clearanceProgress'> = {
     id,
     email,
+    name: 'New Student' // A default name
   };
   const { data, error } = await supabase.from('students').insert(newStudentData).select().single();
 
@@ -91,14 +83,16 @@ export async function createStudent(id: string, email: string): Promise<Student>
 
 
 export async function updateStudent(student: Student): Promise<void> {
-    if (!student.email) {
-      console.error("updateStudent called without a student email.");
+    if (!student.id) {
+      console.error("updateStudent called without a student ID.");
       return;
     }
+    // Omit 'id' from the update payload as it's the primary key and shouldn't be changed.
+    const { id, ...studentData } = student;
     const { error } = await supabase
       .from('students')
-      .update(student)
-      .eq('email', student.email);
+      .update(studentData)
+      .eq('id', id);
 
     if (error) {
         console.error('Error updating student:', error);
@@ -117,8 +111,8 @@ export async function getAllStudents(): Promise<Student[]> {
 
 
 export async function updateDocumentStatus(studentId: string, docId: string, status: 'Approved' | 'Rejected'): Promise<Student | undefined> {
-    const { data: student, error: getStudentError } = await supabase.from('students').select('*').eq('id', studentId).single();
-    if (getStudentError || !student) {
+    const student = await getStudent(studentId);
+    if (!student) {
         console.error(`Could not retrieve student ${studentId} to update document status.`);
         return undefined;
     };
@@ -140,7 +134,5 @@ export async function updateDocumentStatus(studentId: string, docId: string, sta
         throw error;
     }
     
-    const { data: updatedStudent } = await supabase.from('students').select('*').eq('id', studentId).single();
-
-    return updatedStudent;
+    return await getStudent(studentId);
 }

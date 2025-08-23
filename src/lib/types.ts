@@ -13,14 +13,13 @@ export interface Document {
 }
 
 export interface Student {
-  id?: string; // The user's auth ID from Supabase
+  id: string; // The user's auth ID from Supabase (UUID)
   name: string;
-  email?: string;
-  clearanceProgress: number;
+  email: string;
   documents: Document[];
 }
 
 export interface AppSettings {
-  id?: number; // Supabase needs an identifier, should be a number
+  id: number; // This should be a number (bigint in Supabase)
   requiredDocuments: number;
 }

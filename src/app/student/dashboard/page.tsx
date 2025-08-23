@@ -80,8 +80,8 @@ export default function StudentDashboardPage() {
         const settingsData = await getSettings();
         setSettings(settingsData);
         
-        // Then, try to get the student record using their auth email
-        let studentData = await getStudent(user.email!);
+        // Then, try to get the student record using their auth ID
+        let studentData = await getStudent(user.id);
         
         // If no student record exists, create one
         if (!studentData) {
