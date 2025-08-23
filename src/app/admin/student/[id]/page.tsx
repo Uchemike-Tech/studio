@@ -84,9 +84,9 @@ export default function StudentDetailsPage() {
   }, [studentId, fetchStudentData]);
 
   const handleStatusUpdate = async (docId: string, status: 'Approved' | 'Rejected') => {
-    if (studentId) {
+    if (student?.id) {
         try {
-            await updateDocumentStatus(studentId, docId, status);
+            await updateDocumentStatus(student.id, docId, status);
             await fetchStudentData();
             toast({
               title: `Document ${status}`,
