@@ -28,40 +28,53 @@ import Link from 'next/link';
 export default function AdminDashboardPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [settings, setSettings] = useState<AppSettings | null>(null);
-
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // In a real app, you might fetch this data from an API
-    setStudents(getAllStudents());
-    setSettings(getSettings());
+    async function fetchData() {
+      try {
+        const [studentsData, settingsData] = await Promise.all([
+          getAllStudents(),
+          getSettings(),
+        ]);
+        setStudents(studentsData);
+        setSettings(settingsData);
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchData();
   }, []);
 
-  if (!settings) {
+  if (isLoading || !settings) {
     return (
       <DashboardLayout userType="admin">
         <div>Loading...</div>
       </DashboardLayout>
-    )
+    );
   }
 
   const totalStudents = students.length;
-  const pendingRequests = students.filter(student =>
-    student.documents.some(doc => doc.status === 'Pending')
+  const pendingRequests = students.filter((student) =>
+    student.documents.some((doc) => doc.status === 'Pending')
   ).length;
 
   const totalRequiredDocs = settings.requiredDocuments;
   const getClearanceProgress = (student: Student) => {
-    const approvedDocs = student.documents.filter(d => d.status === 'Approved').length;
+    const approvedDocs = student.documents.filter(
+      (d) => d.status === 'Approved'
+    ).length;
     return Math.min((approvedDocs / totalRequiredDocs) * 100, 100);
   };
-  
+
   const getLatestUpdate = (student: Student) => {
     if (student.documents.length === 0) return 'N/A';
     return new Date(
       Math.max(...student.documents.map((d) => new Date(d.updatedAt).getTime()))
     ).toLocaleDateString();
   };
-
 
   return (
     <DashboardLayout userType="admin">
@@ -101,7 +114,9 @@ export default function AdminDashboardPage() {
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{students.filter(s => getClearanceProgress(s) === 100).length}</div>
+            <div className="text-2xl font-bold">
+              {students.filter((s) => getClearanceProgress(s) === 100).length}
+            </div>
             <p className="text-xs text-muted-foreground">
               students have completed clearance
             </p>
@@ -149,7 +164,7 @@ export default function AdminDashboardPage() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  students.map(student => (
+                  students.map((student) => (
                     <TableRow key={student.id}>
                       <TableCell>
                         <div className="font-medium">{student.name}</div>
@@ -159,19 +174,22 @@ export default function AdminDashboardPage() {
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
-                           <Progress value={getClearanceProgress(student)} className="w-24" />
-                           <span>{getClearanceProgress(student).toFixed(0)}%</span>
+                          <Progress
+                            value={getClearanceProgress(student)}
+                            className="w-24"
+                          />
+                          <span>{getClearanceProgress(student).toFixed(0)}%</span>
                         </div>
                       </TableCell>
-                       <TableCell className="hidden md:table-cell">
+                      <TableCell className="hidden md:table-cell">
                         {getLatestUpdate(student)}
                       </TableCell>
                       <TableCell className="text-right">
-                         <Link href={`/admin/student/${student.id}`}>
-                           <Button variant="outline" size="sm">
-                             View
-                           </Button>
-                         </Link>
+                        <Link href={`/admin/student/${student.id}`}>
+                          <Button variant="outline" size="sm">
+                            View
+                          </Button>
+                        </Link>
                       </TableCell>
                     </TableRow>
                   ))

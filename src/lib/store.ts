@@ -2,64 +2,102 @@
 // In-memory data store for prototyping purposes.
 // In a real application, this would be replaced with a proper database.
 
+import {
+  doc,
+  getDoc,
+  setDoc,
+  collection,
+  getDocs,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
+  Timestamp,
+} from 'firebase/firestore';
+import { db } from './firebase';
 import type { Student, Document, AppSettings } from './types';
 
-let settings: AppSettings = {
-  requiredDocuments: 6,
+// Helper to convert Firestore Timestamps to Dates
+const convertTimestamps = (data: any) => {
+  if (!data) return data;
+  for (const key in data) {
+    if (data[key] instanceof Timestamp) {
+      data[key] = data[key].toDate();
+    } else if (typeof data[key] === 'object' && data[key] !== null) {
+      // Recursively convert for nested objects
+      if (Array.isArray(data[key])) {
+        data[key] = data[key].map(convertTimestamps);
+      } else {
+        convertTimestamps(data[key]);
+      }
+    }
+  }
+  return data;
 };
 
-const students: { [id: string]: Student } = {
-  'FUTO/2024/00000': {
-    id: 'FUTO/2024/00000',
-    name: 'Student',
-    email: 'student@futo.edu.ng',
-    clearanceProgress: 0,
-    documents: [],
-  },
-};
 
 // --- Settings ---
-export function getSettings(): AppSettings {
-  // Return a copy to prevent direct mutation
-  return { ...settings };
-}
+export async function getSettings(): Promise<AppSettings> {
+  const docRef = doc(db, 'settings', 'app');
+  const docSnap = await getDoc(docRef);
 
-export function updateSettings(newSettings: AppSettings): void {
-  settings = { ...settings, ...newSettings };
-}
-
-// --- Students ---
-export function getStudent(id: string): Student | undefined {
-  // Return a copy to prevent direct mutation
-  return students[id] ? { ...students[id] } : undefined;
-}
-
-export function updateStudent(student: Student): void {
-  if (students[student.id]) {
-    students[student.id] = student;
+  if (docSnap.exists()) {
+    return docSnap.data() as AppSettings;
+  } else {
+    // Return default settings if none are found
+    const defaultSettings: AppSettings = { requiredDocuments: 6 };
+    await setDoc(docRef, defaultSettings);
+    return defaultSettings;
   }
 }
 
-export function getAllStudents(): Student[] {
-  return Object.values(students).map(s => ({...s, documents: [...s.documents]}));
+export async function updateSettings(newSettings: AppSettings): Promise<void> {
+  const docRef = doc(db, 'settings', 'app');
+  await setDoc(docRef, newSettings, { merge: true });
 }
 
-export function getStudentDocument(studentId: string, docId: string): Document | undefined {
-    const student = getStudent(studentId);
+// --- Students ---
+export async function getStudent(id: string): Promise<Student | undefined> {
+  const docRef = doc(db, 'students', id);
+  const docSnap = await getDoc(docRef);
+
+  if (docSnap.exists()) {
+    return convertTimestamps(docSnap.data()) as Student;
+  }
+  return undefined;
+}
+
+export async function updateStudent(student: Student): Promise<void> {
+    const studentRef = doc(db, 'students', student.id);
+    // Firestore handles Date to Timestamp conversion automatically
+    await setDoc(studentRef, student, { merge: true });
+}
+
+export async function getAllStudents(): Promise<Student[]> {
+  const studentsCol = collection(db, 'students');
+  const studentSnapshot = await getDocs(studentsCol);
+  const studentList = studentSnapshot.docs.map(doc => convertTimestamps(doc.data()) as Student);
+  return studentList;
+}
+
+export async function getStudentDocument(studentId: string, docId: string): Promise<Document | undefined> {
+    const student = await getStudent(studentId);
     if (!student) return undefined;
     return student.documents.find(d => d.id === docId);
 }
 
-export function updateDocumentStatus(studentId: string, docId: string, status: 'Approved' | 'Rejected'): Student | undefined {
-    const student = getStudent(studentId);
+export async function updateDocumentStatus(studentId: string, docId: string, status: 'Approved' | 'Rejected'): Promise<Student | undefined> {
+    const student = await getStudent(studentId);
     if (!student) return undefined;
 
     const docIndex = student.documents.findIndex(d => d.id === docId);
     if (docIndex === -1) return undefined;
     
-    student.documents[docIndex].status = status;
-    student.documents[docIndex].updatedAt = new Date();
+    const updatedDocuments = [...student.documents];
+    updatedDocuments[docIndex].status = status;
+    updatedDocuments[docIndex].updatedAt = new Date();
 
-    updateStudent(student);
-    return student;
+    const studentRef = doc(db, 'students', studentId);
+    await updateDoc(studentRef, { documents: updatedDocuments });
+    
+    return getStudent(studentId);
 }

@@ -31,33 +31,57 @@ const settingsSchema = z.object({
 export default function AdminSettingsPage() {
   const { toast } = useToast();
   const [settings, setSettings] = useState<AppSettings | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors, isDirty },
+    formState: { errors, isDirty, isSubmitting },
   } = useForm<AppSettings>({
     resolver: zodResolver(settingsSchema),
   });
 
   useEffect(() => {
-    const currentSettings = getSettings();
-    setSettings(currentSettings);
-    reset(currentSettings); // Populate form with current settings
-  }, [reset]);
+    async function fetchSettings() {
+      try {
+        const currentSettings = await getSettings();
+        setSettings(currentSettings);
+        reset(currentSettings); // Populate form with current settings
+      } catch (error) {
+        console.error("Failed to fetch settings:", error);
+        toast({
+            title: 'Error',
+            description: 'Failed to load settings.',
+            variant: 'destructive'
+        })
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchSettings();
+  }, [reset, toast]);
 
-  const onSubmit = (data: AppSettings) => {
-    updateSettings(data);
-    setSettings(data);
-    toast({
-      title: 'Settings Updated',
-      description: 'Your changes have been saved successfully.',
-    });
-    reset(data); // Reset form state to new values
+  const onSubmit = async (data: AppSettings) => {
+    try {
+      await updateSettings(data);
+      setSettings(data);
+      toast({
+        title: 'Settings Updated',
+        description: 'Your changes have been saved successfully.',
+      });
+      reset(data); // Reset form state to new values
+    } catch (error) {
+        console.error("Failed to update settings:", error);
+        toast({
+            title: 'Error',
+            description: 'Failed to save settings. Please try again.',
+            variant: 'destructive'
+        })
+    }
   };
 
-  if (!settings) {
+  if (isLoading) {
     return (
       <DashboardLayout userType="admin">
         <div>Loading settings...</div>
@@ -91,6 +115,7 @@ export default function AdminSettingsPage() {
                   type="number"
                   {...register('requiredDocuments')}
                   className="mt-1 max-w-xs"
+                  disabled={isSubmitting}
                 />
                 {errors.requiredDocuments && (
                   <p className="mt-1 text-sm text-destructive">
@@ -105,8 +130,8 @@ export default function AdminSettingsPage() {
             </div>
           </CardContent>
           <CardFooter className="border-t px-6 py-4">
-            <Button type="submit" disabled={!isDirty}>
-              Save Settings
+            <Button type="submit" disabled={!isDirty || isSubmitting}>
+              {isSubmitting ? "Saving..." : "Save Settings"}
             </Button>
           </CardFooter>
         </Card>

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { DashboardLayout } from '@/components/dashboard/layout';
 import {
   Card,
@@ -35,6 +35,7 @@ import { DocumentUploadForm } from './_components/document-upload-form';
 import Image from 'next/image';
 import { getStudent, updateStudent, getSettings } from '@/lib/store';
 import { ViewDocumentDialog } from './_components/view-document-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 const statusIcons = {
   Approved: <CheckCircle className="h-4 w-4 text-green-600" />,
@@ -55,33 +56,72 @@ export default function StudentDashboardPage() {
   const [student, setStudent] = useState<Student | null>(null);
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [viewingDocument, setViewingDocument] = useState<Document | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
+  const fetchStudentData = useCallback(async () => {
+    // In a real app, you'd get the logged-in user's ID
+    const studentId = 'FUTO/2024/00000';
+    try {
+      const [studentData, settingsData] = await Promise.all([
+        getStudent(studentId),
+        getSettings(),
+      ]);
+      setStudent(studentData || null); // Handle case where student is not found
+      setSettings(settingsData);
+    } catch (error) {
+      console.error('Failed to fetch initial data:', error);
+      toast({
+        title: 'Error',
+        description: 'Could not load your dashboard data. Please try again later.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]);
 
   useEffect(() => {
-    // Fetch initial student data and settings
-    const studentData = getStudent('FUTO/2024/00000');
-    const appSettings = getSettings();
-    setStudent(studentData);
-    setSettings(appSettings);
-  }, []);
+    fetchStudentData();
+  }, [fetchStudentData]);
 
-  const handleDocumentUpload = (newDocument: Document) => {
+  const handleDocumentUpload = async (newDocument: Document) => {
     if (student) {
       const updatedStudent: Student = {
         ...student,
         documents: [...student.documents, newDocument],
       };
-      // In a real app, this would be an API call
-      updateStudent(updatedStudent);
-      setStudent(updatedStudent);
+      try {
+        await updateStudent(updatedStudent);
+        setStudent(updatedStudent);
+        toast({
+            title: 'Document Submitted',
+            description: `${newDocument.name} has been submitted for review.`,
+        });
+      } catch (error) {
+        console.error("Failed to upload document:", error);
+        toast({
+            title: 'Upload Failed',
+            description: 'There was an error submitting your document.',
+            variant: 'destructive'
+        });
+      }
     }
   };
 
-  if (!student || !settings) {
+  if (isLoading || !settings) {
     return (
       <DashboardLayout userType="student">
         <div>Loading student data...</div>
       </DashboardLayout>
+    );
+  }
+
+  if (!student) {
+    return (
+        <DashboardLayout userType="student">
+            <div>Student data not found. Please contact support.</div>
+        </DashboardLayout>
     );
   }
 
@@ -279,7 +319,7 @@ export default function StudentDashboardPage() {
                           'Awaiting submission for analysis.'}
                       </TableCell>
                       <TableCell className="hidden md:table-cell">
-                        {doc.updatedAt.toLocaleDateString()}
+                        {new Date(doc.updatedAt).toLocaleDateString()}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button variant="outline" size="sm" onClick={() => setViewingDocument(doc)}>
@@ -295,7 +335,7 @@ export default function StudentDashboardPage() {
         </CardContent>
       </Card>
       {viewingDocument && (
-        <ViewDocumentDialog 
+        <ViewDocumentDialog
           document={viewingDocument}
           onOpenChange={(isOpen) => !isOpen && setViewingDocument(null)}
         />

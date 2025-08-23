@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/dashboard/layout';
 import { Button } from '@/components/ui/button';
@@ -53,29 +53,49 @@ export default function StudentDetailsPage() {
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchStudentData = useCallback(async () => {
     if (typeof id === 'string') {
-      const studentData = getStudent(id);
-      const appSettings = getSettings();
-      if (studentData) {
-        setStudent(studentData);
+      try {
+        const studentData = await getStudent(id);
+        if (studentData) {
+          setStudent(studentData);
+        } else {
+          toast({ title: 'Error', description: 'Student not found.', variant: 'destructive' });
+        }
+      } catch (error) {
+        console.error("Failed to fetch student data:", error);
+        toast({ title: 'Error', description: 'Failed to load student details.', variant: 'destructive' });
       }
+    }
+  }, [id, toast]);
+
+
+  useEffect(() => {
+    async function fetchData() {
+      setIsLoading(true);
+      await fetchStudentData();
+      const appSettings = await getSettings();
       setSettings(appSettings);
       setIsLoading(false);
     }
-  }, [id]);
+    fetchData();
+  }, [id, fetchStudentData]);
 
-  const handleStatusUpdate = (docId: string, status: 'Approved' | 'Rejected') => {
+  const handleStatusUpdate = async (docId: string, status: 'Approved' | 'Rejected') => {
     if (typeof id === 'string') {
-      updateDocumentStatus(id, docId, status);
-      const updatedStudent = getStudent(id); // Re-fetch student to get the latest data
-      if (updatedStudent) {
-        setStudent(updatedStudent);
-        toast({
-          title: `Document ${status}`,
-          description: `The document has been successfully ${status.toLowerCase()}.`,
-        });
-      }
+        try {
+            const updatedStudent = await updateDocumentStatus(id, docId, status);
+            if (updatedStudent) {
+              setStudent(updatedStudent);
+              toast({
+                title: `Document ${status}`,
+                description: `The document has been successfully ${status.toLowerCase()}.`,
+              });
+            }
+        } catch (error) {
+            console.error("Failed to update status:", error);
+            toast({ title: 'Error', description: 'Failed to update document status.', variant: 'destructive' });
+        }
     }
   };
 
@@ -99,9 +119,8 @@ export default function StudentDetailsPage() {
       });
     }
   };
-  
-  const clearanceProgress = student && settings ? Math.min((student.documents.filter(d => d.status === 'Approved').length / settings.requiredDocuments) * 100, 100) : 0;
 
+  const clearanceProgress = student && settings ? Math.min((student.documents.filter(d => d.status === 'Approved').length / settings.requiredDocuments) * 100, 100) : 0;
 
   if (isLoading || !settings) {
     return (
@@ -144,8 +163,8 @@ export default function StudentDetailsPage() {
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-4">
-               <Progress value={clearanceProgress} className="w-full max-w-sm" />
-               <span className="font-semibold">{clearanceProgress.toFixed(0)}% Complete</span>
+              <Progress value={clearanceProgress} className="w-full max-w-sm" />
+              <span className="font-semibold">{clearanceProgress.toFixed(0)}% Complete</span>
             </div>
           </CardContent>
         </Card>
@@ -181,8 +200,8 @@ export default function StudentDetailsPage() {
                         <TableCell className="font-medium">{doc.name}</TableCell>
                         <TableCell>
                           <Badge variant="outline" className={cn('gap-x-2', statusColors[doc.status])}>
-                             {statusIcons[doc.status]}
-                             {doc.status}
+                            {statusIcons[doc.status]}
+                            {doc.status}
                           </Badge>
                         </TableCell>
                         <TableCell className="hidden sm:table-cell">{new Date(doc.updatedAt).toLocaleDateString()}</TableCell>
@@ -191,7 +210,7 @@ export default function StudentDetailsPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex flex-wrap justify-end gap-2">
-                          <Button
+                            <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleViewDocument(doc)}

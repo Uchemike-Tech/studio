@@ -17,12 +17,23 @@ import { Users, CheckCircle, Clock, XCircle } from 'lucide-react';
 
 export default function AdminAnalyticsPage() {
   const [students, setStudents] = useState<Student[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setStudents(getAllStudents());
+    async function fetchStudents() {
+        try {
+            const studentsData = await getAllStudents();
+            setStudents(studentsData);
+        } catch (error) {
+            console.error("Failed to fetch students for analytics:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    }
+    fetchStudents();
   }, []);
 
-  const totalRequiredDocs = 6;
+  const totalRequiredDocs = 6; // This should ideally come from settings
   const getClearanceProgress = (student: Student) => {
     const approvedDocs = student.documents.filter(
       (d) => d.status === 'Approved'
@@ -58,58 +69,64 @@ export default function AdminAnalyticsPage() {
           Analytics
         </h1>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{students.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Fully Cleared</CardTitle>
-            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{fullyClearedStudents}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">In Progress</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{inProgressStudents}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Action Required
-            </CardTitle>
-            <XCircle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{actionRequiredStudents}</div>
-          </CardContent>
-        </Card>
-      </div>
-      <Card>
-        <CardHeader>
-          <CardTitle>Clearance Status Distribution</CardTitle>
-          <CardDescription>
-            A visual breakdown of current clearance statuses across all
-            students.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="pl-2">
-          <ClearanceChart data={chartData} />
-        </CardContent>
-      </Card>
+      {isLoading ? (
+        <div>Loading analytics...</div>
+      ) : (
+        <>
+          <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{students.length}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Fully Cleared</CardTitle>
+                <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{fullyClearedStudents}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">In Progress</CardTitle>
+                <Clock className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{inProgressStudents}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Action Required
+                </CardTitle>
+                <XCircle className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{actionRequiredStudents}</div>
+              </CardContent>
+            </Card>
+          </div>
+          <Card>
+            <CardHeader>
+              <CardTitle>Clearance Status Distribution</CardTitle>
+              <CardDescription>
+                A visual breakdown of current clearance statuses across all
+                students.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="pl-2">
+              <ClearanceChart data={chartData} />
+            </CardContent>
+          </Card>
+        </>
+      )}
     </DashboardLayout>
   );
 }
