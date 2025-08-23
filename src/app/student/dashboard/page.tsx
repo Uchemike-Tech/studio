@@ -62,6 +62,7 @@ export default function StudentDashboardPage() {
 
   useEffect(() => {
     async function fetchInitialData() {
+      setIsLoading(true);
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session || !session.user) {
@@ -88,7 +89,9 @@ export default function StudentDashboardPage() {
                 title: "Welcome!",
                 description: "Creating your student profile..."
             });
-            studentData = await createStudent(user.id, user.email!);
+            // Create the student record and wait for it to complete
+            const newStudent = await createStudent(user.id, user.email!);
+            studentData = newStudent;
         }
         
         setStudent(studentData || null);

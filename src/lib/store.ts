@@ -5,18 +5,22 @@ import { mockStudent } from './mock-data';
 
 // --- Settings ---
 export async function getSettings(): Promise<AppSettings> {
+  const defaultSettings: AppSettings = { id: 1, requiredDocuments: 6 };
+
   const { data, error } = await supabase
     .from('settings')
     .select('*')
     .eq('id', 1)
     .single();
 
-  if (error && error.code !== 'PGRST116') { // PGRST116 means "object not found"
+  if (error && error.code !== 'PGRST116') { // PGRST116 = "object not found"
     console.error('Error fetching settings:', error.message || 'An unknown error occurred');
+    // If there's an actual error (not just 'not found'), return defaults to prevent crash
+    return defaultSettings;
   }
-
-  // If we get data, return it. If not, return a safe default.
-  return data || { id: 1, requiredDocuments: 6 };
+  
+  // If no data is found (first run), return defaults. The admin settings page will handle creation.
+  return data || defaultSettings;
 }
 
 export async function updateSettings(newSettings: AppSettings): Promise<void> {
@@ -59,8 +63,8 @@ export async function getStudent(id: string): Promise<Student | undefined> {
 }
 
 
-export async function createStudent(id: string, email: string): Promise<Student | undefined> {
-  const newStudentData = {
+export async function createStudent(id: string, email: string): Promise<Student> {
+  const newStudentData: Student = {
     ...mockStudent,
     id,
     email,
