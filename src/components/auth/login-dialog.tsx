@@ -16,9 +16,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LogIn } from 'lucide-react';
 import React from 'react';
-import { getStudent } from '@/lib/store';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase-client';
+import { mockStudent } from '@/lib/mock-data';
 
 interface LoginDialogProps {
   userType: 'student' | 'admin';
@@ -56,22 +56,26 @@ export function LoginDialog({ userType }: LoginDialogProps) {
             throw signUpError;
           }
           
-          // If sign up is successful, we can proceed
           if (!signUpData.user) {
             throw new Error("Sign up successful, but no user data returned. Please check your Supabase email confirmation settings.")
+          }
+          
+          // If this is the demo student, create their record in the database
+          if (userType === 'student' && signUpData.user) {
+              const { error: insertError } = await supabase.from('students').insert(mockStudent);
+              if (insertError) {
+                  // Ignore unique constraint violation if student already exists
+                  if (insertError.code !== '23505') { 
+                    console.error("Failed to create student record:", insertError);
+                    throw new Error("Could not create the initial student record.");
+                  }
+              }
           }
 
         } else {
           // If the sign-in error is not "Invalid login credentials", throw it
           throw signInError;
         }
-      }
-
-      // If sign-in or sign-up is successful, proceed
-      if (userType === 'student') {
-        const studentId = 'FUTO/2024/00000';
-        // This will create the student record in the 'students' table if it doesn't exist.
-        await getStudent(studentId);
       }
 
       const path =

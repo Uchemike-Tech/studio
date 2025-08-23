@@ -1,7 +1,6 @@
 
 import { supabase } from './supabase-client';
 import type { Student, Document, AppSettings } from './types';
-import { mockStudent } from './mock-data';
 
 // --- Settings ---
 export async function getSettings(): Promise<AppSettings> {
@@ -52,8 +51,8 @@ export async function getStudent(id: string): Promise<Student | undefined> {
     .single();
 
   if (error && error.code !== 'PGRST116') {
-      console.error('Error getting student:', error);
-      // We don't throw here to allow creating a mock student if needed
+      console.error('Error getting student:', error.message);
+      throw error;
   }
   
   if (data) {
@@ -61,19 +60,6 @@ export async function getStudent(id: string): Promise<Student | undefined> {
         ...data,
         documents: data.documents || [] // Ensure documents is always an array
     } as Student;
-  }
-  
-  if (id === mockStudent.id) {
-    const { data: newStudent, error: insertError } = await supabase
-      .from('students')
-      .insert(mockStudent)
-      .select()
-      .single();
-    if(insertError) {
-      console.error("Failed to insert mock student", insertError);
-      return undefined;
-    }
-    return newStudent as Student;
   }
 
   return undefined;
@@ -97,7 +83,7 @@ export async function getAllStudents(): Promise<Student[]> {
     console.error('Error getting all students:', error);
     throw error;
   }
-  return data as Student[];
+  return (data as Student[]) || [];
 }
 
 
@@ -110,7 +96,7 @@ export async function updateDocumentStatus(studentId: string, docId: string, sta
     
     const updatedDocuments = [...student.documents];
     updatedDocuments[docIndex].status = status;
-    updatedDocuments[docIndex].updatedAt = new Date();
+    updatedDocuments[docIndex].updatedAt = new Date().toISOString();
 
     const { error } = await supabase
       .from('students')
