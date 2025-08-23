@@ -1,7 +1,12 @@
+
 // In-memory data store for prototyping purposes.
 // In a real application, this would be replaced with a proper database.
 
-import type { Student, Document } from './types';
+import type { Student, Document, AppSettings } from './types';
+
+let settings: AppSettings = {
+  requiredDocuments: 6,
+};
 
 const students: { [id: string]: Student } = {
   'FUTO/2024/00000': {
@@ -13,6 +18,17 @@ const students: { [id: string]: Student } = {
   },
 };
 
+// --- Settings ---
+export function getSettings(): AppSettings {
+  // Return a copy to prevent direct mutation
+  return { ...settings };
+}
+
+export function updateSettings(newSettings: AppSettings): void {
+  settings = { ...settings, ...newSettings };
+}
+
+// --- Students ---
 export function getStudent(id: string): Student | undefined {
   // Return a copy to prevent direct mutation
   return students[id] ? { ...students[id] } : undefined;

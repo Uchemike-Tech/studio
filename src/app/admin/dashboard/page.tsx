@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -17,28 +18,39 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Activity, Users, CheckCircle, Clock, MoreHorizontal } from 'lucide-react';
+import { Activity, Users, CheckCircle, Clock } from 'lucide-react';
 import { ClearanceChart } from './_components/clearance-chart';
-import type { Student } from '@/lib/types';
-import { getAllStudents } from '@/lib/store';
+import type { Student, AppSettings } from '@/lib/types';
+import { getAllStudents, getSettings } from '@/lib/store';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
 export default function AdminDashboardPage() {
   const [students, setStudents] = useState<Student[]>([]);
+  const [settings, setSettings] = useState<AppSettings | null>(null);
+
 
   useEffect(() => {
     // In a real app, you might fetch this data from an API
     setStudents(getAllStudents());
+    setSettings(getSettings());
   }, []);
+
+  if (!settings) {
+    return (
+      <DashboardLayout userType="admin">
+        <div>Loading...</div>
+      </DashboardLayout>
+    )
+  }
 
   const totalStudents = students.length;
   const pendingRequests = students.filter(student =>
     student.documents.some(doc => doc.status === 'Pending')
   ).length;
 
-  const totalRequiredDocs = 6;
+  const totalRequiredDocs = settings.requiredDocuments;
   const getClearanceProgress = (student: Student) => {
     const approvedDocs = student.documents.filter(d => d.status === 'Approved').length;
     return Math.min((approvedDocs / totalRequiredDocs) * 100, 100);
@@ -138,7 +150,7 @@ export default function AdminDashboardPage() {
                   <TableHead>Student</TableHead>
                   <TableHead>Progress</TableHead>
                   <TableHead className="hidden md:table-cell">Last Update</TableHead>
-                  <TableHead>
+                  <TableHead className="text-right">
                     <span className="sr-only">Actions</span>
                   </TableHead>
                 </TableRow>
@@ -171,7 +183,7 @@ export default function AdminDashboardPage() {
                        <TableCell className="hidden md:table-cell">
                         {getLatestUpdate(student)}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="text-right">
                          <Link href={`/admin/student/${student.id}`}>
                            <Button variant="outline" size="sm">
                              View

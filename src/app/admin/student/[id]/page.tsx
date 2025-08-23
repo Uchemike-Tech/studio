@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -22,8 +23,8 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { getStudent, updateDocumentStatus } from '@/lib/store';
-import type { Student, Document } from '@/lib/types';
+import { getStudent, updateDocumentStatus, getSettings } from '@/lib/store';
+import type { Student, Document, AppSettings } from '@/lib/types';
 import { ArrowLeft, CheckCircle, Clock, XCircle, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
@@ -50,14 +51,17 @@ export default function StudentDetailsPage() {
   const { toast } = useToast();
 
   const [student, setStudent] = useState<Student | null>(null);
+  const [settings, setSettings] = useState<AppSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (typeof id === 'string') {
       const studentData = getStudent(id);
+      const appSettings = getSettings();
       if (studentData) {
         setStudent(studentData);
       }
+      setSettings(appSettings);
       setIsLoading(false);
     }
   }, [id]);
@@ -76,11 +80,10 @@ export default function StudentDetailsPage() {
     }
   };
   
-  const totalRequiredDocs = 6;
-  const clearanceProgress = student ? Math.min((student.documents.filter(d => d.status === 'Approved').length / totalRequiredDocs) * 100, 100) : 0;
+  const clearanceProgress = student && settings ? Math.min((student.documents.filter(d => d.status === 'Approved').length / settings.requiredDocuments) * 100, 100) : 0;
 
 
-  if (isLoading) {
+  if (isLoading || !settings) {
     return (
       <DashboardLayout userType="admin">
         <div>Loading student details...</div>

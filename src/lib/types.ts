@@ -1,3 +1,4 @@
+
 export interface Document {
   id: string;
   name: string;
@@ -16,4 +17,8 @@ export interface Student {
   email: string;
   clearanceProgress: number;
   documents: Document[];
+}
+
+export interface AppSettings {
+  requiredDocuments: number;
 }

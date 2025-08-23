@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -21,7 +22,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import type { Student, Document } from '@/lib/types';
+import type { Student, Document, AppSettings } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import {
   CheckCircle,
@@ -32,7 +33,8 @@ import {
 } from 'lucide-react';
 import { DocumentUploadForm } from './_components/document-upload-form';
 import Image from 'next/image';
-import { getStudent, updateStudent } from '@/lib/store';
+import { getStudent, updateStudent, getSettings } from '@/lib/store';
+import { ViewDocumentDialog } from './_components/view-document-dialog';
 
 const statusIcons = {
   Approved: <CheckCircle className="h-4 w-4 text-green-600" />,
@@ -51,11 +53,16 @@ const statusColors: { [key in Document['status']]: string } = {
 
 export default function StudentDashboardPage() {
   const [student, setStudent] = useState<Student | null>(null);
+  const [settings, setSettings] = useState<AppSettings | null>(null);
+  const [viewingDocument, setViewingDocument] = useState<Document | null>(null);
+
 
   useEffect(() => {
-    // Fetch initial student data
+    // Fetch initial student data and settings
     const studentData = getStudent('FUTO/2024/00000');
+    const appSettings = getSettings();
     setStudent(studentData);
+    setSettings(appSettings);
   }, []);
 
   const handleDocumentUpload = (newDocument: Document) => {
@@ -70,7 +77,7 @@ export default function StudentDashboardPage() {
     }
   };
 
-  if (!student) {
+  if (!student || !settings) {
     return (
       <DashboardLayout userType="student">
         <div>Loading student data...</div>
@@ -87,7 +94,7 @@ export default function StudentDashboardPage() {
   const rejectedDocs = student.documents.filter(
     (d) => d.status === 'Rejected'
   ).length;
-  const totalRequiredDocs = 6;
+  const totalRequiredDocs = settings.requiredDocuments;
   const clearanceProgress = Math.min(
     (approvedDocs / totalRequiredDocs) * 100,
     100
@@ -238,7 +245,7 @@ export default function StudentDashboardPage() {
                 <TableHead className="hidden md:table-cell">
                   Last Updated
                 </TableHead>
-                <TableHead>
+                <TableHead className="text-right">
                   <span className="sr-only">Actions</span>
                 </TableHead>
               </TableRow>
@@ -273,8 +280,8 @@ export default function StudentDashboardPage() {
                     <TableCell className="hidden md:table-cell">
                       {doc.updatedAt.toLocaleDateString()}
                     </TableCell>
-                    <TableCell>
-                      <Button variant="outline" size="sm">
+                    <TableCell className="text-right">
+                      <Button variant="outline" size="sm" onClick={() => setViewingDocument(doc)}>
                         View
                       </Button>
                     </TableCell>
@@ -285,6 +292,13 @@ export default function StudentDashboardPage() {
           </Table>
         </CardContent>
       </Card>
+      {viewingDocument && (
+        <ViewDocumentDialog 
+          document={viewingDocument}
+          onOpenChange={(isOpen) => !isOpen && setViewingDocument(null)}
+        />
+      )}
     </DashboardLayout>
   );
 }
+
