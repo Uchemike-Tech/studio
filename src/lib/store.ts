@@ -102,10 +102,13 @@ export async function updateStudent(student: Student): Promise<void> {
       console.error("updateStudent called without a student auth_id.");
       return;
     }
-    // We must use auth_id for the update to comply with RLS policies.
+    
+    // Only update the 'documents' field. This is the only field that should change.
+    // Attempting to update the entire student object can violate database constraints
+    // or RLS policies if we try to change the id, auth_id, etc.
     const { error } = await supabase
       .from('students')
-      .update(student)
+      .update({ documents: student.documents })
       .eq('auth_id', student.auth_id);
 
     if (error) {
