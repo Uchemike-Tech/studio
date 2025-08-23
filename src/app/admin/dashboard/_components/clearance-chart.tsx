@@ -27,11 +27,11 @@ const chartConfig = {
   },
   cleared: {
     label: 'Cleared',
-    color: 'hsl(var(--accent))',
+    color: 'hsl(var(--primary))',
   },
   progress: {
     label: 'In Progress',
-    color: 'hsl(var(--primary))',
+    color: 'hsl(var(--accent))',
   },
   rejected: {
     label: 'Rejected',
