@@ -36,20 +36,20 @@ export async function updateSettings(newSettings: AppSettings): Promise<void> {
 }
 
 // --- Students ---
-export async function getStudent(email: string): Promise<Student | undefined> {
-  if (!email) {
-    console.error('getStudent called with no email.');
+export async function getStudent(id: string): Promise<Student | undefined> {
+  if (!id) {
+    console.error('getStudent called with no id.');
     return undefined;
   }
   
   const { data, error } = await supabase
     .from('students')
     .select('*')
-    .eq('email', email)
+    .eq('id', id)
     .single();
 
   if (error && error.code !== 'PGRST116') {
-      console.error(`Error getting student with email ${email}:`, error.message);
+      console.error(`Error getting student with ID ${id}:`, error.message);
   }
   
   if (data) {
