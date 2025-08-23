@@ -80,8 +80,8 @@ export default function StudentDashboardPage() {
         const settingsData = await getSettings();
         setSettings(settingsData);
         
-        // Then, try to get the student record using their auth ID
-        let studentData = await getStudent(user.id);
+        // Then, try to get the student record using their auth email
+        let studentData = await getStudent(user.email!);
         
         // If no student record exists, create one
         if (!studentData) {
@@ -90,7 +90,7 @@ export default function StudentDashboardPage() {
                 description: "Creating your student profile..."
             });
             // Create the student record and wait for it to complete
-            const newStudent = await createStudent(user.id, user.email);
+            const newStudent = await createStudent(user.id, user.email!);
             studentData = newStudent;
         }
         

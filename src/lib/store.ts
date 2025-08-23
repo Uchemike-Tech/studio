@@ -20,6 +20,16 @@ export async function getSettings(): Promise<AppSettings> {
   }
   
   // If no data is found (first run), return defaults. The admin settings page will handle creation.
+  if (!data) {
+    const { error: insertError } = await supabase.from('settings').insert(defaultSettings);
+      if (insertError) {
+        console.error('Error inserting default settings:', insertError.message);
+        // If insertion fails, return the default object anyway to prevent app crash
+        return defaultSettings;
+      }
+      return defaultSettings;
+  }
+
   return data || defaultSettings;
 }
 
@@ -36,20 +46,20 @@ export async function updateSettings(newSettings: AppSettings): Promise<void> {
 }
 
 // --- Students ---
-export async function getStudent(id: string): Promise<Student | undefined> {
-  if (!id) {
-    console.error('getStudent called with no id.');
+export async function getStudent(email: string): Promise<Student | undefined> {
+  if (!email) {
+    console.error('getStudent called with no email.');
     return undefined;
   }
   
   const { data, error } = await supabase
     .from('students')
     .select('*')
-    .eq('id', id)
+    .eq('email', email)
     .single();
 
   if (error && error.code !== 'PGRST116') {
-      console.error(`Error getting student with ID ${id}:`, error.message);
+      console.error(`Error getting student with email ${email}:`, error.message);
   }
   
   if (data) {
@@ -81,14 +91,14 @@ export async function createStudent(id: string, email: string): Promise<Student>
 
 
 export async function updateStudent(student: Student): Promise<void> {
-    if (!student.id) {
-      console.error("updateStudent called without a student id.");
+    if (!student.email) {
+      console.error("updateStudent called without a student email.");
       return;
     }
     const { error } = await supabase
       .from('students')
       .update(student)
-      .eq('id', student.id);
+      .eq('email', student.email);
 
     if (error) {
         console.error('Error updating student:', error);
