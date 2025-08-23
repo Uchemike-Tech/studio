@@ -12,34 +12,35 @@ export async function getSettings(): Promise<AppSettings> {
 
   if (error && error.code !== 'PGRST116') { // PGRST116: "object not found"
     console.error('Error fetching settings:', error.message || 'An unknown error occurred');
-    // Don't throw, proceed to create default settings as a fallback.
+    // Don't throw, proceed to return default settings as a fallback.
   }
 
   if (data) {
     return data;
   } else {
-    // If settings don't exist, create and return them.
+    // If settings don't exist in the DB, return a default object.
+    // The admin settings page will handle the initial creation.
     const defaultSettings: AppSettings = { id: 1, requiredDocuments: 6 };
-    const { data: insertedData, error: insertError } = await supabase
+    
+    // Attempt to create them for the first time.
+    const { error: insertError } = await supabase
       .from('settings')
-      .insert(defaultSettings)
-      .select()
-      .single();
+      .insert(defaultSettings, { onConflict: 'id' });
       
     if (insertError) {
       console.error('Error inserting default settings:', insertError.message);
       // If insertion fails, return the default object anyway to prevent app crash
       return defaultSettings;
     }
-    return insertedData || defaultSettings;
+    return defaultSettings;
   }
 }
 
 export async function updateSettings(newSettings: AppSettings): Promise<void> {
+    // Use upsert to create the record if it doesn't exist, or update it if it does.
   const { error } = await supabase
     .from('settings')
-    .update(newSettings)
-    .eq('id', 1);
+    .upsert(newSettings, { onConflict: 'id' });
 
   if (error) {
     console.error('Error updating settings:', error);
