@@ -5,7 +5,7 @@ import { mockStudent } from './mock-data';
 
 // --- Settings ---
 export async function getSettings(): Promise<AppSettings> {
-  const defaultSettings: AppSettings = { id: 1, requiredDocuments: 6 };
+  const defaultSettings: AppSettings = { id: 1, requiredDocuments: 5 };
 
   const { data, error } = await supabase
     .from('settings')
@@ -112,9 +112,6 @@ export async function updateStudent(student: Student): Promise<void> {
       return;
     }
     
-    // Only update the 'documents' field. This is the only field that should change.
-    // Attempting to update the entire student object can violate database constraints
-    // or RLS policies if we try to change the id, auth_id, etc.
     const { error } = await supabase
       .from('students')
       .update({ documents: student.documents })
@@ -136,10 +133,10 @@ export async function getAllStudents(): Promise<Student[]> {
 }
 
 
-export async function updateDocumentStatus(studentId: number, docId: string, status: 'Approved' | 'Rejected'): Promise<Student | undefined> {
-    const student = await getStudentById(studentId);
+export async function updateDocumentStatus(studentAuthId: string, docId: string, status: 'Approved' | 'Rejected'): Promise<Student | undefined> {
+    const student = await getStudentByAuthId(studentAuthId);
     if (!student) {
-        console.error(`Could not retrieve student ${studentId} to update document status.`);
+        console.error(`Could not retrieve student ${studentAuthId} to update document status.`);
         return undefined;
     };
 
@@ -150,8 +147,7 @@ export async function updateDocumentStatus(studentId: number, docId: string, sta
     updatedDocuments[docIndex].status = status;
     updatedDocuments[docIndex].updatedAt = new Date().toISOString();
 
-    // Use the student's auth_id for the update operation
     await updateStudent({ ...student, documents: updatedDocuments });
     
-    return await getStudentById(studentId);
+    return await getStudentByAuthId(studentAuthId);
 }

@@ -81,10 +81,10 @@ export default function StudentDetailsPage({ params: { id } }: { params: { id: s
   }, [studentId, fetchStudentData]);
 
   const handleStatusUpdate = async (docId: string, status: 'Approved' | 'Rejected') => {
-    if (student?.id) {
+    if (student?.auth_id) {
         try {
-            await updateDocumentStatus(student.id, docId, status);
-            await fetchStudentData(student.id); // Refetch data
+            await updateDocumentStatus(student.auth_id, docId, status);
+            await fetchStudentData(student.id); // Refetch data using numeric id for the page
             toast({
               title: `Document ${status}`,
               description: `The document has been successfully ${status.toLowerCase()}.`,
@@ -146,7 +146,7 @@ export default function StudentDetailsPage({ params: { id } }: { params: { id: s
           <CardHeader>
             <CardTitle>{student.name}</CardTitle>
             <CardDescription>
-              {student.id} | {student.email}
+              ID: {student.id} | {student.email}
             </CardDescription>
           </CardHeader>
           <CardContent>

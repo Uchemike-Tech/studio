@@ -1,8 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
+import { useState, useEffect, useCallback } from 'react';
 import { DashboardLayout } from '@/components/dashboard/layout';
 import {
   Card,
@@ -22,12 +21,15 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Student, Document } from '@/lib/types';
-import { getAllStudents } from '@/lib/store';
+import { getAllStudents, updateDocumentStatus } from '@/lib/store';
 import { Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+import { ReviewDocumentDialog } from './_components/review-dialog';
 
-interface PendingDocument extends Document {
+export interface PendingDocument extends Document {
   studentId: number;
+  studentAuthId: string;
   studentName: string;
 }
 
@@ -49,35 +51,61 @@ const statusIcons = {
 export default function AdminRequestsPage() {
   const [pendingDocuments, setPendingDocuments] = useState<PendingDocument[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [reviewingDoc, setReviewingDoc] = useState<PendingDocument | null>(null);
+  const { toast } = useToast();
+
+  const fetchPendingDocs = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const students = await getAllStudents();
+      const pendingDocs = students
+        .flatMap((student) =>
+          (student.documents || [])
+            .filter((doc) => doc.status === 'Pending')
+            .map((doc) => ({
+              ...doc,
+              studentId: student.id,
+              studentAuthId: student.auth_id,
+              studentName: student.name,
+            }))
+        )
+        .sort(
+          (a, b) =>
+            new Date(b.submittedAt).getTime() -
+            new Date(a.submittedAt).getTime()
+        );
+      setPendingDocuments(pendingDocs);
+    } catch (error) {
+      console.error("Failed to fetch pending documents:", error);
+      toast({
+        title: 'Error',
+        description: 'Could not fetch pending documents.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]);
 
   useEffect(() => {
-    async function fetchPendingDocs() {
-      try {
-        const students = await getAllStudents();
-        const pendingDocs = students
-          .flatMap((student) =>
-            (student.documents || [])
-              .filter((doc) => doc.status === 'Pending')
-              .map((doc) => ({
-                ...doc,
-                studentId: student.id,
-                studentName: student.name,
-              }))
-          )
-          .sort(
-            (a, b) =>
-              new Date(b.submittedAt).getTime() -
-              new Date(a.submittedAt).getTime()
-          );
-        setPendingDocuments(pendingDocs);
-      } catch (error) {
-        console.error("Failed to fetch pending documents:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
     fetchPendingDocs();
-  }, []);
+  }, [fetchPendingDocs]);
+
+  const handleStatusUpdate = async (doc: PendingDocument, status: 'Approved' | 'Rejected') => {
+    try {
+      await updateDocumentStatus(doc.studentAuthId, doc.id, status);
+      toast({
+        title: `Document ${status}`,
+        description: `The document has been successfully ${status.toLowerCase()}.`,
+      });
+      fetchPendingDocs(); // Refresh the list
+      setReviewingDoc(null); // Close the dialog
+    } catch (error) {
+        console.error("Failed to update status:", error);
+        toast({ title: 'Error', description: 'Failed to update document status.', variant: 'destructive' });
+    }
+  };
+
 
   return (
     <DashboardLayout userType="admin">
@@ -121,7 +149,7 @@ export default function AdminRequestsPage() {
                     </TableRow>
                   ) : (
                     pendingDocuments.map((doc) => (
-                      <TableRow key={doc.id}>
+                      <TableRow key={`${doc.studentId}-${doc.id}`}>
                         <TableCell>
                           <div className="font-medium">{doc.studentName}</div>
                           <div className="hidden text-sm text-muted-foreground md:inline">
@@ -142,11 +170,9 @@ export default function AdminRequestsPage() {
                           {new Date(doc.submittedAt).toLocaleDateString()}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Link href={`/admin/student/${doc.studentId}`}>
-                            <Button variant="outline" size="sm">
-                              Review
-                            </Button>
-                          </Link>
+                          <Button variant="outline" size="sm" onClick={() => setReviewingDoc(doc)}>
+                            Review
+                          </Button>
                         </TableCell>
                       </TableRow>
                     ))
@@ -157,6 +183,14 @@ export default function AdminRequestsPage() {
           )}
         </CardContent>
       </Card>
+
+      {reviewingDoc && (
+        <ReviewDocumentDialog
+          document={reviewingDoc}
+          onOpenChange={(isOpen) => !isOpen && setReviewingDoc(null)}
+          onStatusUpdate={handleStatusUpdate}
+        />
+      )}
     </DashboardLayout>
   );
 }
