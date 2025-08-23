@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -33,6 +34,8 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import { supabase } from '@/lib/supabase-client';
+import { useToast } from '@/hooks/use-toast';
 
 interface NavItem {
   href: string;
@@ -49,6 +52,7 @@ interface DashboardLayoutProps {
 export function DashboardLayout({ children, userType }: DashboardLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { toast } = useToast();
 
   const studentNavItems: NavItem[] = [
     { href: '/student/dashboard', icon: Home, label: 'Dashboard' },
@@ -62,6 +66,23 @@ export function DashboardLayout({ children, userType }: DashboardLayoutProps) {
   ];
 
   const navItems = userType === 'student' ? studentNavItems : adminNavItems;
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast({
+        title: 'Logout Failed',
+        description: error.message,
+        variant: 'destructive',
+      });
+    } else {
+      toast({
+        title: 'Logged Out',
+        description: 'You have been successfully logged out.',
+      });
+      router.push('/');
+    }
+  };
 
   const NavLink = ({ href, icon: Icon, label, badge }: NavItem) => (
     <Link
@@ -171,7 +192,7 @@ export function DashboardLayout({ children, userType }: DashboardLayoutProps) {
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuItem>Support</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => router.push('/')}>
+              <DropdownMenuItem onClick={handleLogout}>
                 Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
