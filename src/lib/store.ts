@@ -62,6 +62,7 @@ export async function getStudent(email: string): Promise<Student | undefined> {
 
   if (error && error.code !== 'PGRST116') {
       console.error(`Error getting student with email ${email}:`, error.message);
+      return undefined; // Explicitly return undefined on error
   }
   
   if (data) {
@@ -71,17 +72,17 @@ export async function getStudent(email: string): Promise<Student | undefined> {
     } as Student;
   }
 
-  return undefined;
+  return undefined; // Explicitly return undefined if no data
 }
 
 export async function updateStudent(student: Student): Promise<void> {
-    if (!student.id) {
-      console.error("updateStudent called without a student ID.");
+    if (!student.email) {
+      console.error("updateStudent called without a student email.");
       return;
     }
     const { error } = await supabase
       .from('students')
-      .upsert(student);
+      .upsert(student, { onConflict: 'email' }); // Use email for conflict resolution
 
     if (error) {
         console.error('Error updating student:', error);
