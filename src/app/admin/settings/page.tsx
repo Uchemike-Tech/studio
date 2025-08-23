@@ -66,7 +66,11 @@ export default function AdminSettingsPage() {
 
   const onSubmit = async (data: FormValues) => {
     try {
-      await updateSettings({ requiredDocuments: data.requiredDocuments });
+        const updatedData: AppSettings = {
+            id: 'app', // ensure we're updating the correct row
+            requiredDocuments: data.requiredDocuments,
+        };
+      await updateSettings(updatedData);
       const newSettings = await getSettings();
       setSettings(newSettings);
       toast({

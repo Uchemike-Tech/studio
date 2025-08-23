@@ -11,29 +11,42 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { ClearanceChart } from '../dashboard/_components/clearance-chart';
-import type { Student } from '@/lib/types';
-import { getAllStudents } from '@/lib/store';
+import type { Student, AppSettings } from '@/lib/types';
+import { getAllStudents, getSettings } from '@/lib/store';
 import { Users, CheckCircle, Clock, XCircle } from 'lucide-react';
 
 export default function AdminAnalyticsPage() {
   const [students, setStudents] = useState<Student[]>([]);
+  const [settings, setSettings] = useState<AppSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchStudents() {
+    async function fetchAnalyticsData() {
         try {
-            const studentsData = await getAllStudents();
+            const [studentsData, settingsData] = await Promise.all([
+              getAllStudents(),
+              getSettings(),
+            ]);
             setStudents(studentsData);
+            setSettings(settingsData);
         } catch (error) {
-            console.error("Failed to fetch students for analytics:", error);
+            console.error("Failed to fetch data for analytics:", error);
         } finally {
             setIsLoading(false);
         }
     }
-    fetchStudents();
+    fetchAnalyticsData();
   }, []);
 
-  const totalRequiredDocs = 6; // This should ideally come from settings
+  if (isLoading || !settings) {
+      return (
+          <DashboardLayout userType="admin">
+            <div>Loading analytics...</div>
+          </DashboardLayout>
+      );
+  }
+
+  const totalRequiredDocs = settings.requiredDocuments;
   const getClearanceProgress = (student: Student) => {
     const approvedDocs = student.documents.filter(
       (d) => d.status === 'Approved'
@@ -69,9 +82,6 @@ export default function AdminAnalyticsPage() {
           Analytics
         </h1>
       </div>
-      {isLoading ? (
-        <div>Loading analytics...</div>
-      ) : (
         <>
           <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
             <Card>
@@ -126,7 +136,6 @@ export default function AdminAnalyticsPage() {
             </CardContent>
           </Card>
         </>
-      )}
     </DashboardLayout>
   );
 }

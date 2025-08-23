@@ -60,7 +60,7 @@ export default function AdminRequestsPage() {
               .filter((doc) => doc.status === 'Pending')
               .map((doc) => ({
                 ...doc,
-                studentId: student.id,
+                studentId: student.id!,
                 studentName: student.name,
               }))
           )

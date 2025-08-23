@@ -73,12 +73,14 @@ export default function StudentDetailsPage() {
   useEffect(() => {
     async function fetchData() {
       setIsLoading(true);
-      await fetchStudentData();
       const appSettings = await getSettings();
       setSettings(appSettings);
+      await fetchStudentData();
       setIsLoading(false);
     }
-    fetchData();
+    if (id) {
+        fetchData();
+    }
   }, [id, fetchStudentData]);
 
   const handleStatusUpdate = async (docId: string, status: 'Approved' | 'Rejected') => {
@@ -112,7 +114,7 @@ export default function StudentDetailsPage() {
 
   const clearanceProgress = student && settings ? Math.min((student.documents.filter(d => d.status === 'Approved').length / settings.requiredDocuments) * 100, 100) : 0;
 
-  if (isLoading || !settings) {
+  if (isLoading) {
     return (
       <DashboardLayout userType="admin">
         <div>Loading student details...</div>
