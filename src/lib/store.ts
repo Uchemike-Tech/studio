@@ -15,11 +15,8 @@ export async function getSettings(): Promise<AppSettings> {
 
   if (error && error.code !== 'PGRST116') { // PGRST116 = "object not found"
     console.error('Error fetching settings:', error.message || 'An unknown error occurred');
-    return defaultSettings;
   }
   
-  // If no settings exist in the DB, return the hardcoded default.
-  // The admin settings page will handle the initial creation on first save.
   return data || defaultSettings;
 }
 

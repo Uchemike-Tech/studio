@@ -107,13 +107,13 @@ export default function StudentDashboardPage() {
 
   const handleDocumentUpload = async (newDocument: Document) => {
     if (student) {
-      const updatedStudent: Student = {
+      const updatedStudentData: Student = {
         ...student,
         documents: [...student.documents, newDocument],
       };
       try {
-        await updateStudent(updatedStudent);
-        setStudent(updatedStudent);
+        await updateStudent(updatedStudentData);
+        setStudent(updatedStudentData);
         toast({
             title: 'Document Submitted',
             description: `${newDocument.name} has been submitted for review.`,
