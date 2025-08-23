@@ -1,4 +1,3 @@
-
 // In-memory data store for prototyping purposes.
 // In a real application, this would be replaced with a proper database.
 
@@ -9,12 +8,11 @@ import {
   collection,
   getDocs,
   updateDoc,
-  arrayUnion,
-  arrayRemove,
   Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Student, Document, AppSettings } from './types';
+import { mockStudent } from './mock-data';
 
 // Helper to convert Firestore Timestamps to Dates
 const convertTimestamps = (data: any) => {
@@ -63,6 +61,18 @@ export async function getStudent(id: string): Promise<Student | undefined> {
   if (docSnap.exists()) {
     return convertTimestamps(docSnap.data()) as Student;
   }
+  // If student doesn't exist, create one based on mock data
+  // This is a "just-in-time" user creation for the demo
+  if (id === 'FUTO/2024/00000') {
+    const newStudentData = {
+        ...mockStudent,
+        id: 'FUTO/2024/00000',
+        email: 'student@futo.edu.ng'
+    };
+    await setDoc(docRef, newStudentData);
+    return newStudentData;
+  }
+
   return undefined;
 }
 
