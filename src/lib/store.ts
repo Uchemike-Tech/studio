@@ -1,7 +1,7 @@
 // In-memory data store for prototyping purposes.
 // In a real application, this would be replaced with a proper database.
 
-import type { Student } from './types';
+import type { Student, Document } from './types';
 
 const students: { [id: string]: Student } = {
   'FUTO/2024/00000': {
@@ -25,5 +25,25 @@ export function updateStudent(student: Student): void {
 }
 
 export function getAllStudents(): Student[] {
-  return Object.values(students).map(s => ({...s}));
+  return Object.values(students).map(s => ({...s, documents: [...s.documents]}));
+}
+
+export function getStudentDocument(studentId: string, docId: string): Document | undefined {
+    const student = getStudent(studentId);
+    if (!student) return undefined;
+    return student.documents.find(d => d.id === docId);
+}
+
+export function updateDocumentStatus(studentId: string, docId: string, status: 'Approved' | 'Rejected'): Student | undefined {
+    const student = getStudent(studentId);
+    if (!student) return undefined;
+
+    const docIndex = student.documents.findIndex(d => d.id === docId);
+    if (docIndex === -1) return undefined;
+    
+    student.documents[docIndex].status = status;
+    student.documents[docIndex].updatedAt = new Date();
+
+    updateStudent(student);
+    return student;
 }

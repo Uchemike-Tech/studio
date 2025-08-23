@@ -14,12 +14,14 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart';
 
-const chartData = [
-  { status: 'Fully Cleared', count: 0, fill: 'var(--color-cleared)' },
-  { status: 'In Progress', count: 0, fill: 'var(--color-progress)' },
-  { status: 'Action Required', count: 0, fill: 'var(--color-rejected)' },
-  { status: 'Not Started', count: 0, fill: 'var(--color-pending)' },
-];
+interface ClearanceChartProps {
+  data: {
+    fullyCleared: number;
+    inProgress: number;
+    actionRequired: number;
+    notStarted: number;
+  };
+}
 
 const chartConfig = {
   count: {
@@ -43,7 +45,14 @@ const chartConfig = {
   },
 } satisfies import('@/components/ui/chart').ChartConfig;
 
-export function ClearanceChart() {
+export function ClearanceChart({ data }: ClearanceChartProps) {
+  const chartData = [
+    { status: 'Fully Cleared', count: data.fullyCleared, fill: 'var(--color-cleared)' },
+    { status: 'In Progress', count: data.inProgress, fill: 'var(--color-progress)' },
+    { status: 'Action Required', count: data.actionRequired, fill: 'var(--color-rejected)' },
+    { status: 'Not Started', count: data.notStarted, fill: 'var(--color-pending)' },
+  ];
+
   const noData = chartData.every((item) => item.count === 0);
   return (
     <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
@@ -76,6 +85,7 @@ export function ClearanceChart() {
             tickLine={false}
             axisLine={false}
             tickFormatter={(value) => `${value}`}
+            allowDecimals={false}
           />
           <ChartTooltip
             cursor={false}
