@@ -29,13 +29,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 
 const statusIcons = {
-  Approved: <CheckCircle className="h-4 w-4 text-green-600" />,
+  Verified: <CheckCircle className="h-4 w-4 text-green-600" />,
   Pending: <Clock className="h-4 w-4 text-yellow-600" />,
   Rejected: <XCircle className="h-4 w-4 text-red-600" />,
 };
 
 const statusColors: { [key in Document['status']]: string } = {
-  Approved:
+  Verified:
     'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/50 dark:text-green-300 dark:border-green-800',
   Pending:
     'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/50 dark:text-yellow-300 dark:border-yellow-800',
@@ -80,7 +80,7 @@ export default function StudentDetailsPage({ params: { id } }: { params: { id: s
     }
   }, [studentId, fetchStudentData]);
 
-  const handleStatusUpdate = async (docId: string, status: 'Approved' | 'Rejected') => {
+  const handleStatusUpdate = async (docId: string, status: 'Verified' | 'Rejected') => {
     if (student?.auth_id) {
         try {
             await updateDocumentStatus(student.auth_id, docId, status);
@@ -108,7 +108,7 @@ export default function StudentDetailsPage({ params: { id } }: { params: { id: s
     }
   };
 
-  const clearanceProgress = student && settings ? Math.min((student.documents.filter(d => d.status === 'Approved').length / settings.requiredDocuments) * 100, 100) : 0;
+  const clearanceProgress = student && settings ? Math.min((student.documents.filter(d => d.status === 'Verified').length / settings.requiredDocuments) * 100, 100) : 0;
 
   if (isLoading) {
     return (
@@ -210,11 +210,11 @@ export default function StudentDetailsPage({ params: { id } }: { params: { id: s
                               variant="default"
                               size="sm"
                               className="bg-accent text-accent-foreground hover:bg-accent/90"
-                              onClick={() => handleStatusUpdate(doc.id, 'Approved')}
-                              disabled={doc.status === 'Approved'}
+                              onClick={() => handleStatusUpdate(doc.id, 'Verified')}
+                              disabled={doc.status === 'Verified'}
                             >
                               <CheckCircle className="mr-2 h-4 w-4" />
-                              Approve
+                              Verify
                             </Button>
                             <Button
                               variant="destructive"

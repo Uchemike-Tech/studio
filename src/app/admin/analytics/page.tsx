@@ -48,10 +48,10 @@ export default function AdminAnalyticsPage() {
 
   const totalRequiredDocs = settings.requiredDocuments;
   const getClearanceProgress = (student: Student) => {
-    const approvedDocs = student.documents.filter(
-      (d) => d.status === 'Approved'
+    const verifiedDocs = student.documents.filter(
+      (d) => d.status === 'Verified'
     ).length;
-    return Math.min((approvedDocs / totalRequiredDocs) * 100, 100);
+    return Math.min((verifiedDocs / totalRequiredDocs) * 100, 100);
   };
 
   const fullyClearedStudents = students.filter(

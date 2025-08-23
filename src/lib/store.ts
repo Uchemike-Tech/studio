@@ -133,7 +133,7 @@ export async function getAllStudents(): Promise<Student[]> {
 }
 
 
-export async function updateDocumentStatus(studentAuthId: string, docId: string, status: 'Approved' | 'Rejected'): Promise<Student | undefined> {
+export async function updateDocumentStatus(studentAuthId: string, docId: string, status: 'Verified' | 'Rejected'): Promise<Student | undefined> {
     const student = await getStudentByAuthId(studentAuthId);
     if (!student) {
         console.error(`Could not retrieve student ${studentAuthId} to update document status.`);

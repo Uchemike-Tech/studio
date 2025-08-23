@@ -39,13 +39,13 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase-client';
 
 const statusIcons = {
-  Approved: <CheckCircle className="h-4 w-4 text-green-600" />,
+  Verified: <CheckCircle className="h-4 w-4 text-green-600" />,
   Pending: <Clock className="h-4 w-4 text-yellow-600" />,
   Rejected: <XCircle className="h-4 w-4 text-red-600" />,
 };
 
 const statusColors: { [key in Document['status']]: string } = {
-  Approved:
+  Verified:
     'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/50 dark:text-green-300 dark:border-green-800',
   Pending:
     'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/50 dark:text-yellow-300 dark:border-yellow-800',
@@ -145,8 +145,8 @@ export default function StudentDashboardPage() {
     );
   }
 
-  const approvedDocs = student.documents.filter(
-    (d) => d.status === 'Approved'
+  const verifiedDocs = student.documents.filter(
+    (d) => d.status === 'Verified'
   ).length;
   const pendingDocs = student.documents.filter(
     (d) => d.status === 'Pending'
@@ -156,7 +156,7 @@ export default function StudentDashboardPage() {
   ).length;
   const totalRequiredDocs = settings.requiredDocuments;
   const clearanceProgress = Math.min(
-    (approvedDocs / totalRequiredDocs) * 100,
+    (verifiedDocs / totalRequiredDocs) * 100,
     100
   );
 
@@ -192,12 +192,12 @@ export default function StudentDashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Documents Approved
+              Documents Verified
             </CardTitle>
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{approvedDocs}</div>
+            <div className="text-2xl font-bold">{verifiedDocs}</div>
             <p className="text-xs text-muted-foreground">
               out of {totalRequiredDocs} total required
             </p>

@@ -19,7 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 interface ReviewDocumentDialogProps {
   document: PendingDocument | null;
   onOpenChange: (open: boolean) => void;
-  onStatusUpdate: (document: PendingDocument, status: 'Approved' | 'Rejected') => Promise<void>;
+  onStatusUpdate: (document: PendingDocument, status: 'Verified' | 'Rejected') => Promise<void>;
 }
 
 export function ReviewDocumentDialog({
@@ -33,7 +33,7 @@ export function ReviewDocumentDialog({
 
   const isOpen = !!document;
 
-  const handleAction = async (status: 'Approved' | 'Rejected') => {
+  const handleAction = async (status: 'Verified' | 'Rejected') => {
     setIsSubmitting(true);
     await onStatusUpdate(document, status);
     setIsSubmitting(false);
@@ -102,14 +102,14 @@ export function ReviewDocumentDialog({
             <Button
               variant="default"
               className="bg-accent text-accent-foreground hover:bg-accent/90"
-              onClick={() => handleAction('Approved')}
+              onClick={() => handleAction('Verified')}
               disabled={isSubmitting}
             >
               {isSubmitting ? (
                 <Loader2 className="animate-spin" />
               ) : (
                 <>
-                  <CheckCircle className="mr-2" /> Approve
+                  <CheckCircle className="mr-2" /> Verify
                 </>
               )}
             </Button>

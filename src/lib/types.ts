@@ -2,7 +2,7 @@
 export interface Document {
   id: string;
   name: string;
-  status: 'Approved' | 'Pending' | 'Rejected';
+  status: 'Verified' | 'Pending' | 'Rejected';
   submittedAt: Date | string; // Allow string for Supabase dates
   updatedAt: Date | string; // Allow string for Supabase dates
   fileUrl?: string;

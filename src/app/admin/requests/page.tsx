@@ -34,7 +34,7 @@ export interface PendingDocument extends Document {
 }
 
 const statusColors: { [key in Document['status']]: string } = {
-  Approved:
+  Verified:
     'bg-green-100 text-green-800 border-green-200 dark:bg-green-900/50 dark:text-green-300 dark:border-green-800',
   Pending:
     'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/50 dark:text-yellow-300 dark:border-yellow-800',
@@ -44,7 +44,7 @@ const statusColors: { [key in Document['status']]: string } = {
 
 const statusIcons = {
   Pending: <Clock className="h-4 w-4 text-yellow-600" />,
-  Approved: <div />,
+  Verified: <div />,
   Rejected: <div />,
 };
 
@@ -91,7 +91,7 @@ export default function AdminRequestsPage() {
     fetchPendingDocs();
   }, [fetchPendingDocs]);
 
-  const handleStatusUpdate = async (doc: PendingDocument, status: 'Approved' | 'Rejected') => {
+  const handleStatusUpdate = async (doc: PendingDocument, status: 'Verified' | 'Rejected') => {
     try {
       await updateDocumentStatus(doc.studentAuthId, doc.id, status);
       toast({
