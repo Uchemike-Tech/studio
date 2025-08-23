@@ -5,6 +5,8 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { storage } from '@/lib/firebase';
 import { analyzeClearanceDocuments } from '@/ai/flows/analyze-clearance-documents';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -75,30 +77,39 @@ export function DocumentUploadForm({
     setIsSubmitting(true);
     setAnalysisResult(null);
 
+    const file: File = data.documentFile[0];
+    const docId = `doc_${Date.now()}`;
+
     try {
-      const file: File = data.documentFile[0];
+      // 1. Upload file to Firebase Storage
+      const storageRef = ref(storage, `documents/${studentId}/${docId}-${file.name}`);
+      toast({ title: 'Uploading File...', description: 'Please wait.' });
+      await uploadBytes(storageRef, file);
+      const downloadUrl = await getDownloadURL(storageRef);
+
+      // 2. Get data URI for AI analysis
       const documentDataUri = await fileToDataUri(file);
 
+      // 3. Run AI Analysis
       toast({
         title: 'Analyzing Document...',
         description: 'Please wait while the AI analyzes your document.',
       });
-
       const result = await analyzeClearanceDocuments({
         documentDataUri,
         documentDescription: data.documentDescription,
         studentId,
       });
-
       setAnalysisResult(result);
 
+      // 4. Create document object and trigger parent callback
       const newDocument: Document = {
-        id: `doc_${Date.now()}`,
+        id: docId,
         name: file.name,
         status: 'Pending', // All new documents are pending admin approval
         submittedAt: new Date(),
         updatedAt: new Date(),
-        fileDataUri: documentDataUri, // Store the data URI
+        fileUrl: downloadUrl, // Store the public URL from Firebase Storage
         analysis: {
           summary: result.analysisSummary,
           suggestedStatus: result.suggestedClearanceStatus,
@@ -121,10 +132,10 @@ export function DocumentUploadForm({
         fileInput.value = '';
       }
     } catch (error) {
-      console.error('Analysis failed:', error);
+      console.error('Upload or analysis failed:', error);
       toast({
         title: 'Error',
-        description: 'Could not analyze the document. Please try again.',
+        description: 'Could not upload or analyze the document. Please try again.',
         variant: 'destructive',
       });
     } finally {

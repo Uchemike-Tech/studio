@@ -24,7 +24,7 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { getStudent, updateDocumentStatus, getSettings } from '@/lib/store';
 import type { Student, Document, AppSettings } from '@/lib/types';
-import { ArrowLeft, CheckCircle, Clock, XCircle, Download } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Clock, XCircle, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
 
@@ -100,22 +100,13 @@ export default function StudentDetailsPage() {
   };
 
   const handleViewDocument = (doc: Document) => {
-    // In a real app, this would link to a secure URL for the document.
-    // For this demo, we'll open a placeholder.
-    if (doc.fileDataUri) {
-      const link = document.createElement('a');
-      link.href = doc.fileDataUri;
-      link.download = doc.name;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+    if (doc.fileUrl) {
+      window.open(doc.fileUrl, '_blank');
     } else {
-      // Fallback for older documents without data URI
-      window.open('https://placehold.co/800x1100.png', '_blank');
       toast({
-        title: 'Viewing Document',
-        description: 'Showing a placeholder as the document URL is not available.',
-        variant: 'default',
+        title: 'Document Unavailable',
+        description: 'The document URL is missing.',
+        variant: 'destructive',
       });
     }
   };
@@ -215,7 +206,7 @@ export default function StudentDetailsPage() {
                               size="sm"
                               onClick={() => handleViewDocument(doc)}
                             >
-                              <Download className="mr-2 h-4 w-4" />
+                              <Eye className="mr-2 h-4 w-4" />
                               View
                             </Button>
                             <Button

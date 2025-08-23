@@ -5,7 +5,7 @@ export interface Document {
   status: 'Approved' | 'Pending' | 'Rejected';
   submittedAt: Date;
   updatedAt: Date;
-  fileDataUri?: string; // Add this line
+  fileUrl?: string; // Changed from fileDataUri
   analysis?: {
     summary: string;
     suggestedStatus: string;
