@@ -8,9 +8,7 @@ import {
   LineChart,
   Menu,
   Settings,
-  University,
   Users,
-  FileText,
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
@@ -108,7 +106,7 @@ export function DashboardLayout({ children, userType }: DashboardLayoutProps) {
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
             <Link href="/" className="flex items-center gap-2 font-semibold">
-              <University className="h-6 w-6 text-primary" />
+              <Image src="/favicon.ico" alt="FUTO Logo" width={24} height={24} />
               <span className="">FUTO Portal</span>
             </Link>
             <Button variant="outline" size="icon" className="ml-auto h-8 w-8">
@@ -160,7 +158,7 @@ export function DashboardLayout({ children, userType }: DashboardLayoutProps) {
                   href="#"
                   className="flex items-center gap-2 text-lg font-semibold mb-4"
                 >
-                  <University className="h-6 w-6 text-primary" />
+                  <Image src="/favicon.ico" alt="FUTO Logo" width={24} height={24} />
                   <span className="">FUTO Portal</span>
                 </Link>
                 {navItems.map((item) => (
