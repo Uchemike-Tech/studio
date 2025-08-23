@@ -94,8 +94,8 @@ export function DocumentUploadForm({
         .from('documents')
         .getPublicUrl(filePath);
 
-      if (!urlData.publicUrl) {
-          throw new Error("Could not get public URL for the document.")
+      if (!urlData || !urlData.publicUrl) {
+          throw new Error("Could not get public URL for the document. Please ensure the bucket is public.")
       }
       const downloadUrl = urlData.publicUrl;
 

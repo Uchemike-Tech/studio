@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { CheckCircle, XCircle, Sparkles, Loader2, Eye } from 'lucide-react';
 import type { PendingDocument } from '../page';
+import { useToast } from '@/hooks/use-toast';
 
 interface ReviewDocumentDialogProps {
   document: PendingDocument | null;
@@ -27,6 +28,7 @@ export function ReviewDocumentDialog({
   onStatusUpdate,
 }: ReviewDocumentDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
   if (!document) return null;
 
   const isOpen = !!document;
@@ -40,6 +42,12 @@ export function ReviewDocumentDialog({
   const handleViewDocument = () => {
     if (document.fileUrl) {
       window.open(document.fileUrl, '_blank', 'noopener,noreferrer');
+    } else {
+      toast({
+        title: 'File Not Available',
+        description: 'The URL for this document could not be found.',
+        variant: 'destructive',
+      });
     }
   };
 
