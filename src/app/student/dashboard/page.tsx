@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { DashboardLayout } from '@/components/dashboard/layout';
 import {
   Card,
@@ -56,34 +56,30 @@ export default function StudentDashboardPage() {
   const [student, setStudent] = useState<Student | null>(null);
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [viewingDocument, setViewingDocument] = useState<Document | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  const fetchStudentData = useCallback(async () => {
-    // In a real app, you'd get the logged-in user's ID
-    const studentId = 'FUTO/2024/00000';
-    try {
-      const [studentData, settingsData] = await Promise.all([
-        getStudent(studentId),
-        getSettings(),
-      ]);
-      setStudent(studentData || null); // Handle case where student is not found
-      setSettings(settingsData);
-    } catch (error) {
-      console.error('Failed to fetch initial data:', error);
-      toast({
-        title: 'Error',
-        description: 'Could not load your dashboard data. Please try again later.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [toast]);
-
   useEffect(() => {
-    fetchStudentData();
-  }, [fetchStudentData]);
+    async function fetchInitialData() {
+      // In a real app, you'd get the logged-in user's ID
+      const studentId = 'FUTO/2024/00000';
+      try {
+        const [studentData, settingsData] = await Promise.all([
+          getStudent(studentId),
+          getSettings(),
+        ]);
+        setStudent(studentData || null); // Handle case where student is not found
+        setSettings(settingsData);
+      } catch (error) {
+        console.error('Failed to fetch initial data:', error);
+        toast({
+          title: 'Error',
+          description: 'Could not load your dashboard data. Please try again later.',
+          variant: 'destructive',
+        });
+      }
+    }
+    fetchInitialData();
+  }, [toast]);
 
   const handleDocumentUpload = async (newDocument: Document) => {
     if (student) {
@@ -109,19 +105,11 @@ export default function StudentDashboardPage() {
     }
   };
 
-  if (isLoading || !settings) {
+  if (!student || !settings) {
     return (
       <DashboardLayout userType="student">
         <div>Loading student data...</div>
       </DashboardLayout>
-    );
-  }
-
-  if (!student) {
-    return (
-        <DashboardLayout userType="student">
-            <div>Student data not found. Please contact support.</div>
-        </DashboardLayout>
     );
   }
 
