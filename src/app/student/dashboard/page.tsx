@@ -57,28 +57,32 @@ export default function StudentDashboardPage() {
   const [student, setStudent] = useState<Student | null>(null);
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [viewingDocument, setViewingDocument] = useState<Document | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
     async function fetchInitialData() {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-          toast({
-              title: 'Not Authenticated',
-              description: 'You must be logged in to view this page.',
-              variant: 'destructive',
-          });
-          return;
-      }
-      const studentId = session.user.id;
-
       try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+            toast({
+                title: 'Not Authenticated',
+                description: 'You must be logged in to view this page.',
+                variant: 'destructive',
+            });
+            setIsLoading(false);
+            return;
+        }
+        const studentId = session.user.id;
+
         const [studentData, settingsData] = await Promise.all([
           getStudent(studentId),
           getSettings(),
         ]);
-        setStudent(studentData || null); // Handle case where student is not found
+        
+        setStudent(studentData || null);
         setSettings(settingsData);
+        
       } catch (error) {
         console.error('Failed to fetch initial data:', error);
         toast({
@@ -86,6 +90,8 @@ export default function StudentDashboardPage() {
           description: 'Could not load your dashboard data. Please try again later.',
           variant: 'destructive',
         });
+      } finally {
+        setIsLoading(false);
       }
     }
     fetchInitialData();
@@ -115,10 +121,18 @@ export default function StudentDashboardPage() {
     }
   };
 
-  if (!student || !settings) {
+  if (isLoading) {
     return (
       <DashboardLayout userType="student">
         <div>Loading student data...</div>
+      </DashboardLayout>
+    );
+  }
+
+  if (!student || !settings) {
+    return (
+      <DashboardLayout userType="student">
+        <div>Could not load student data. Please ensure you are logged in and have a student record.</div>
       </DashboardLayout>
     );
   }
