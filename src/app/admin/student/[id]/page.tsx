@@ -43,14 +43,14 @@ const statusColors: { [key in Document['status']]: string } = {
     'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/50 dark:text-red-300 dark:border-red-800',
 };
 
-export default function StudentDetailsPage({ params }: { params: { id: string } }) {
+export default function StudentDetailsPage({ params: { id } }: { params: { id: string } }) {
   const router = useRouter();
+  const studentId = Number(id);
   const { toast } = useToast();
 
   const [student, setStudent] = useState<Student | null>(null);
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [studentId, setStudentId] = useState<number | null>(null);
 
   const fetchStudentData = useCallback(async (id: number) => {
     try {
@@ -75,12 +75,10 @@ export default function StudentDetailsPage({ params }: { params: { id: string } 
       await fetchStudentData(id);
       setIsLoading(false);
     }
-    if (params.id) {
-        const id = Number(params.id);
-        setStudentId(id);
-        fetchData(id);
+    if (studentId) {
+        fetchData(studentId);
     }
-  }, [params.id, fetchStudentData]);
+  }, [studentId, fetchStudentData]);
 
   const handleStatusUpdate = async (docId: string, status: 'Approved' | 'Rejected') => {
     if (student?.id) {
