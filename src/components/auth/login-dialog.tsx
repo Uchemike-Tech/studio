@@ -15,11 +15,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LogIn } from 'lucide-react';
 import React from 'react';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
-import { getStudent, updateStudent } from '@/lib/store';
+import { getStudent } from '@/lib/store';
 import { mockStudent } from '@/lib/mock-data';
 import { useToast } from '@/hooks/use-toast';
-
+import { supabase } from '@/lib/supabase-client';
 
 interface LoginDialogProps {
   userType: 'student' | 'admin';
@@ -34,19 +33,20 @@ export function LoginDialog({ userType }: LoginDialogProps) {
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const auth = getAuth();
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
 
-      if (user) {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
          if (userType === 'student') {
             const studentId = 'FUTO/2024/00000';
-            let student = await getStudent(studentId);
-            if (!student) {
-                const newStudent = { ...mockStudent };
-                await updateStudent(newStudent);
-            }
+            // Check if student exists, if not, getStudent will create it.
+            await getStudent(studentId);
          }
         const path =
           userType === 'student' ? '/student/dashboard' : '/admin/dashboard';
@@ -58,7 +58,7 @@ export function LoginDialog({ userType }: LoginDialogProps) {
         console.error("Login failed:", error);
         toast({
             title: 'Login Failed',
-            description: error.message,
+            description: error.message || 'An unexpected error occurred.',
             variant: 'destructive'
         })
     }

@@ -56,7 +56,7 @@ export default function AdminRequestsPage() {
         const students = await getAllStudents();
         const pendingDocs = students
           .flatMap((student) =>
-            student.documents
+            (student.documents || [])
               .filter((doc) => doc.status === 'Pending')
               .map((doc) => ({
                 ...doc,

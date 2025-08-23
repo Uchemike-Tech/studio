@@ -84,14 +84,13 @@ export default function StudentDetailsPage() {
   const handleStatusUpdate = async (docId: string, status: 'Approved' | 'Rejected') => {
     if (typeof id === 'string') {
         try {
-            const updatedStudent = await updateDocumentStatus(id, docId, status);
-            if (updatedStudent) {
-              setStudent(updatedStudent);
-              toast({
-                title: `Document ${status}`,
-                description: `The document has been successfully ${status.toLowerCase()}.`,
-              });
-            }
+            await updateDocumentStatus(id, docId, status);
+            // Refetch data to show the update
+            await fetchStudentData();
+            toast({
+              title: `Document ${status}`,
+              description: `The document has been successfully ${status.toLowerCase()}.`,
+            });
         } catch (error) {
             console.error("Failed to update status:", error);
             toast({ title: 'Error', description: 'Failed to update document status.', variant: 'destructive' });

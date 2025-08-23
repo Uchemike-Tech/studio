@@ -5,8 +5,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
-import { storage } from '@/lib/firebase';
+import { supabase } from '@/lib/supabase-client';
 import { analyzeClearanceDocuments } from '@/ai/flows/analyze-clearance-documents';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -79,18 +78,32 @@ export function DocumentUploadForm({
 
     const file: File = data.documentFile[0];
     const docId = `doc_${Date.now()}`;
+    const filePath = `${studentId}/${docId}-${file.name}`;
 
     try {
-      // 1. Upload file to Firebase Storage
-      const storageRef = ref(storage, `documents/${studentId}/${docId}-${file.name}`);
+      // 1. Upload file to Supabase Storage
       toast({ title: 'Uploading File...', description: 'Please wait.' });
-      await uploadBytes(storageRef, file);
-      const downloadUrl = await getDownloadURL(storageRef);
+      const { error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(filePath, file);
 
-      // 2. Get data URI for AI analysis
+      if (uploadError) throw uploadError;
+
+      // 2. Get public URL for the uploaded file
+      const { data: urlData } = supabase.storage
+        .from('documents')
+        .getPublicUrl(filePath);
+
+      if (!urlData.publicUrl) {
+          throw new Error("Could not get public URL for the document.")
+      }
+      const downloadUrl = urlData.publicUrl;
+
+
+      // 3. Get data URI for AI analysis
       const documentDataUri = await fileToDataUri(file);
 
-      // 3. Run AI Analysis
+      // 4. Run AI Analysis
       toast({
         title: 'Analyzing Document...',
         description: 'Please wait while the AI analyzes your document.',
@@ -102,14 +115,14 @@ export function DocumentUploadForm({
       });
       setAnalysisResult(result);
 
-      // 4. Create document object and trigger parent callback
+      // 5. Create document object and trigger parent callback
       const newDocument: Document = {
         id: docId,
         name: file.name,
         status: 'Pending', // All new documents are pending admin approval
         submittedAt: new Date(),
         updatedAt: new Date(),
-        fileUrl: downloadUrl, // Store the public URL from Firebase Storage
+        fileUrl: downloadUrl, 
         analysis: {
           summary: result.analysisSummary,
           suggestedStatus: result.suggestedClearanceStatus,
@@ -131,11 +144,11 @@ export function DocumentUploadForm({
       if (fileInput) {
         fileInput.value = '';
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Upload or analysis failed:', error);
       toast({
         title: 'Error',
-        description: 'Could not upload or analyze the document. Please try again.',
+        description: error.message || 'Could not upload or analyze the document. Please try again.',
         variant: 'destructive',
       });
     } finally {

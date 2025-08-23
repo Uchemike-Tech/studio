@@ -28,6 +28,8 @@ const settingsSchema = z.object({
     .max(20, 'Cannot require more than 20 documents'),
 });
 
+type FormValues = z.infer<typeof settingsSchema>;
+
 export default function AdminSettingsPage() {
   const { toast } = useToast();
   const [settings, setSettings] = useState<AppSettings | null>(null);
@@ -38,7 +40,7 @@ export default function AdminSettingsPage() {
     handleSubmit,
     reset,
     formState: { errors, isDirty, isSubmitting },
-  } = useForm<AppSettings>({
+  } = useForm<FormValues>({
     resolver: zodResolver(settingsSchema),
   });
 
@@ -47,7 +49,7 @@ export default function AdminSettingsPage() {
       try {
         const currentSettings = await getSettings();
         setSettings(currentSettings);
-        reset(currentSettings); // Populate form with current settings
+        reset({ requiredDocuments: currentSettings.requiredDocuments }); // Populate form with current settings
       } catch (error) {
         console.error("Failed to fetch settings:", error);
         toast({
@@ -62,10 +64,11 @@ export default function AdminSettingsPage() {
     fetchSettings();
   }, [reset, toast]);
 
-  const onSubmit = async (data: AppSettings) => {
+  const onSubmit = async (data: FormValues) => {
     try {
-      await updateSettings(data);
-      setSettings(data);
+      await updateSettings({ requiredDocuments: data.requiredDocuments });
+      const newSettings = await getSettings();
+      setSettings(newSettings);
       toast({
         title: 'Settings Updated',
         description: 'Your changes have been saved successfully.',
@@ -116,6 +119,7 @@ export default function AdminSettingsPage() {
                   {...register('requiredDocuments')}
                   className="mt-1 max-w-xs"
                   disabled={isSubmitting}
+                  defaultValue={settings?.requiredDocuments}
                 />
                 {errors.requiredDocuments && (
                   <p className="mt-1 text-sm text-destructive">

@@ -1,91 +1,105 @@
 
-import {
-  doc,
-  getDoc,
-  setDoc,
-  collection,
-  getDocs,
-  updateDoc,
-  Timestamp,
-} from 'firebase/firestore';
-import { db } from './firebase';
+import { supabase } from './supabase-client';
 import type { Student, Document, AppSettings } from './types';
 import { mockStudent } from './mock-data';
 
-// Helper to convert Firestore Timestamps to Dates
-const convertTimestamps = (data: any) => {
-  if (!data) return data;
-  for (const key in data) {
-    if (data[key] instanceof Timestamp) {
-      data[key] = data[key].toDate();
-    } else if (typeof data[key] === 'object' && data[key] !== null) {
-      // Recursively convert for nested objects
-      if (Array.isArray(data[key])) {
-        data[key] = data[key].map(convertTimestamps);
-      } else {
-        convertTimestamps(data[key]);
-      }
-    }
-  }
-  return data;
-};
-
-
 // --- Settings ---
 export async function getSettings(): Promise<AppSettings> {
-  const docRef = doc(db, 'settings', 'app');
-  const docSnap = await getDoc(docRef);
+  const { data, error } = await supabase
+    .from('settings')
+    .select('*')
+    .eq('id', 'app')
+    .single();
 
-  if (docSnap.exists()) {
-    return docSnap.data() as AppSettings;
+  if (error && error.code !== 'PGRST116') { // PGRST116: "object not found"
+    console.error('Error fetching settings:', error);
+    throw error;
+  }
+
+  if (data) {
+    return data;
   } else {
-    // Return default settings if none are found
+    // Return default settings and insert them if none are found
     const defaultSettings: AppSettings = { requiredDocuments: 6 };
-    await setDoc(docRef, defaultSettings);
+    const { error: insertError } = await supabase
+      .from('settings')
+      .insert({ id: 'app', ...defaultSettings });
+    if (insertError) {
+      console.error('Error inserting default settings:', insertError);
+    }
     return defaultSettings;
   }
 }
 
 export async function updateSettings(newSettings: AppSettings): Promise<void> {
-  const docRef = doc(db, 'settings', 'app');
-  await setDoc(docRef, newSettings, { merge: true });
+  const { error } = await supabase
+    .from('settings')
+    .update(newSettings)
+    .eq('id', 'app');
+
+  if (error) {
+    console.error('Error updating settings:', error);
+    throw error;
+  }
 }
 
 // --- Students ---
 export async function getStudent(id: string): Promise<Student | undefined> {
-  const docRef = doc(db, 'students', id);
-  const docSnap = await getDoc(docRef);
+  const { data, error } = await supabase
+    .from('students')
+    .select('*')
+    .eq('id', id)
+    .single();
 
-  if (docSnap.exists()) {
-    return convertTimestamps(docSnap.data()) as Student;
+  if (error && error.code !== 'PGRST116') {
+      console.error('Error getting student:', error);
+      // We don't throw here to allow creating a mock student if needed
+  }
+  
+  if (data) {
+    return {
+        ...data,
+        documents: data.documents || [] // Ensure documents is always an array
+    } as Student;
   }
   
   if (id === mockStudent.id) {
-     await setDoc(docRef, mockStudent);
-     return mockStudent;
+    const { data: newStudent, error: insertError } = await supabase
+      .from('students')
+      .insert(mockStudent)
+      .select()
+      .single();
+    if(insertError) {
+      console.error("Failed to insert mock student", insertError);
+      return undefined;
+    }
+    return newStudent as Student;
   }
 
   return undefined;
 }
 
 export async function updateStudent(student: Student): Promise<void> {
-    const studentRef = doc(db, 'students', student.id);
-    // Firestore handles Date to Timestamp conversion automatically
-    await setDoc(studentRef, student, { merge: true });
+    const { error } = await supabase
+      .from('students')
+      .upsert(student)
+      .eq('id', student.id);
+
+    if (error) {
+        console.error('Error updating student:', error);
+        throw error;
+    }
 }
 
 export async function getAllStudents(): Promise<Student[]> {
-  const studentsCol = collection(db, 'students');
-  const studentSnapshot = await getDocs(studentsCol);
-  const studentList = studentSnapshot.docs.map(doc => convertTimestamps(doc.data()) as Student);
-  return studentList;
+  const { data, error } = await supabase.from('students').select('*');
+  if (error) {
+    console.error('Error getting all students:', error);
+    throw error;
+  }
+  return data as Student[];
 }
 
-export async function getStudentDocument(studentId: string, docId: string): Promise<Document | undefined> {
-    const student = await getStudent(studentId);
-    if (!student) return undefined;
-    return student.documents.find(d => d.id === docId);
-}
 
 export async function updateDocumentStatus(studentId: string, docId: string, status: 'Approved' | 'Rejected'): Promise<Student | undefined> {
     const student = await getStudent(studentId);
@@ -98,8 +112,15 @@ export async function updateDocumentStatus(studentId: string, docId: string, sta
     updatedDocuments[docIndex].status = status;
     updatedDocuments[docIndex].updatedAt = new Date();
 
-    const studentRef = doc(db, 'students', studentId);
-await updateDoc(studentRef, { documents: updatedDocuments });
+    const { error } = await supabase
+      .from('students')
+      .update({ documents: updatedDocuments })
+      .eq('id', studentId);
+    
+    if (error) {
+        console.error('Error updating document status:', error);
+        throw error;
+    }
     
     return getStudent(studentId);
 }
