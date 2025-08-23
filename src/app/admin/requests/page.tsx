@@ -27,7 +27,8 @@ import { Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface PendingDocument extends Document {
-  studentId: string;
+  studentId: number;
+  studentAuthId: string;
   studentName: string;
 }
 
@@ -60,7 +61,8 @@ export default function AdminRequestsPage() {
               .filter((doc) => doc.status === 'Pending')
               .map((doc) => ({
                 ...doc,
-                studentId: student.id!,
+                studentId: student.id,
+                studentAuthId: student.auth_id,
                 studentName: student.name,
               }))
           )
@@ -125,7 +127,7 @@ export default function AdminRequestsPage() {
                         <TableCell>
                           <div className="font-medium">{doc.studentName}</div>
                           <div className="hidden text-sm text-muted-foreground md:inline">
-                            {doc.studentId}
+                            {doc.studentAuthId}
                           </div>
                         </TableCell>
                         <TableCell>{doc.name}</TableCell>
