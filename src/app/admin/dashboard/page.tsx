@@ -14,28 +14,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Activity, Users, CheckCircle, Clock } from 'lucide-react';
 import { ClearanceChart } from './_components/clearance-chart';
-import { mockStudent } from '@/lib/mock-data';
-import { cn } from '@/lib/utils';
-import type { Document } from '@/lib/types';
 
-const statusColors: { [key in Document['status'] | 'Complete' | 'In Progress']: string } = {
-  Approved: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  Pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-  Rejected: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-  Complete: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-  'In Progress': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
-};
-
-const mockRequests = [
-  { ...mockStudent, id: 'FUTO/2024/12345', name: 'John Doe', clearanceProgress: 50 },
-  { ...mockStudent, id: 'FUTO/2024/67890', name: 'Jane Smith', clearanceProgress: 100, documents: mockStudent.documents.map(d => ({ ...d, status: 'Approved' })) },
-  { ...mockStudent, id: 'FUTO/2024/54321', name: 'Sam Wilson', clearanceProgress: 25, documents: mockStudent.documents.map(d => ({ ...d, status: 'Rejected' })) },
-  { ...mockStudent, id: 'FUTO/2024/09876', name: 'Binta Bello', clearanceProgress: 75, documents: mockStudent.documents.map((d, i) => ({ ...d, status: i < 3 ? 'Approved' : 'Pending' })) },
-];
+const mockRequests: any[] = [];
 
 export default function AdminDashboardPage() {
   return (
@@ -52,8 +34,8 @@ export default function AdminDashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">452</div>
-            <p className="text-xs text-muted-foreground">+5 since last month</p>
+            <div className="text-2xl font-bold">0</div>
+            <p className="text-xs text-muted-foreground">No data available</p>
           </CardContent>
         </Card>
         <Card>
@@ -62,8 +44,8 @@ export default function AdminDashboardPage() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">12</div>
-            <p className="text-xs text-muted-foreground">+3 since last hour</p>
+            <div className="text-2xl font-bold">0</div>
+            <p className="text-xs text-muted-foreground">No data available</p>
           </CardContent>
         </Card>
         <Card>
@@ -72,8 +54,8 @@ export default function AdminDashboardPage() {
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">89</div>
-            <p className="text-xs text-muted-foreground">+15% from last week</p>
+            <div className="text-2xl font-bold">0</div>
+            <p className="text-xs text-muted-foreground">No data available</p>
           </CardContent>
         </Card>
         <Card>
@@ -82,8 +64,8 @@ export default function AdminDashboardPage() {
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">3.5 Days</div>
-            <p className="text-xs text-muted-foreground">-0.5 days from last week</p>
+            <div className="text-2xl font-bold">-</div>
+            <p className="text-xs text-muted-foreground">No data available</p>
           </CardContent>
         </Card>
       </div>
@@ -108,29 +90,18 @@ export default function AdminDashboardPage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockRequests.map((req) => (
-                  <TableRow key={req.id}>
-                    <TableCell>
-                      <div className="font-medium">{req.name}</div>
-                      <div className="hidden text-sm text-muted-foreground md:inline">
-                        {req.id}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={cn(req.clearanceProgress === 100 ? statusColors['Complete'] : statusColors['In Progress'])}>
-                        {req.clearanceProgress}% Complete
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {req.documents[0].updatedAt.toLocaleString()}
-                    </TableCell>
-                    <TableCell>
-                      <Button variant="outline" size="sm">
-                        Review
-                      </Button>
+                {mockRequests.length === 0 ? (
+                  <TableRow>
+                    <TableCell
+                      colSpan={4}
+                      className="h-24 text-center text-muted-foreground"
+                    >
+                      No recent requests
                     </TableCell>
                   </TableRow>
-                ))}
+                ) : (
+                  <></>
+                )}
               </TableBody>
             </Table>
           </CardContent>

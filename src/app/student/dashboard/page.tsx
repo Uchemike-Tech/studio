@@ -18,8 +18,7 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { mockStudent } from '@/lib/mock-data';
-import type { Document } from '@/lib/types';
+import type { Student, Document } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import {
   CheckCircle,
@@ -43,9 +42,15 @@ const statusColors: { [key in Document['status']]: string } = {
   Rejected: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/50 dark:text-red-300 dark:border-red-800',
 };
 
-export default function StudentDashboardPage() {
-  const student = mockStudent;
+const student: Student = {
+  id: 'FUTO/2024/00000',
+  name: 'Student',
+  email: 'student@futo.edu.ng',
+  clearanceProgress: 0,
+  documents: [],
+};
 
+export default function StudentDashboardPage() {
   return (
     <DashboardLayout userType="student">
       <div className="flex items-center">
@@ -196,31 +201,42 @@ export default function StudentDashboardPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {student.documents.map((doc) => (
-                <TableRow key={doc.id}>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={cn('gap-2', statusColors[doc.status])}
-                    >
-                      {statusIcons[doc.status]}
-                      {doc.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="font-medium">{doc.name}</TableCell>
-                  <TableCell className="max-w-xs truncate text-sm text-muted-foreground">
-                    {doc.analysis?.summary || 'Awaiting submission for analysis.'}
-                  </TableCell>
-                  <TableCell className="hidden md:table-cell">
-                    {doc.updatedAt.toLocaleDateString()}
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="outline" size="sm">
-                      View
-                    </Button>
+              {student.documents.length === 0 ? (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="h-24 text-center text-muted-foreground"
+                  >
+                    No documents submitted
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                student.documents.map((doc) => (
+                  <TableRow key={doc.id}>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={cn('gap-2', statusColors[doc.status])}
+                      >
+                        {statusIcons[doc.status]}
+                        {doc.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="font-medium">{doc.name}</TableCell>
+                    <TableCell className="max-w-xs truncate text-sm text-muted-foreground">
+                      {doc.analysis?.summary || 'Awaiting submission for analysis.'}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell">
+                      {doc.updatedAt.toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      <Button variant="outline" size="sm">
+                        View
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>

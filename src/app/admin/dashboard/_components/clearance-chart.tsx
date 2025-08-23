@@ -15,10 +15,10 @@ import {
 } from '@/components/ui/chart';
 
 const chartData = [
-  { status: 'Fully Cleared', count: 89, fill: 'var(--color-cleared)' },
-  { status: 'In Progress', count: 156, fill: 'var(--color-progress)' },
-  { status: 'Action Required', count: 45, fill: 'var(--color-rejected)' },
-  { status: 'Not Started', count: 162, fill: 'var(--color-pending)' },
+  { status: 'Fully Cleared', count: 0, fill: 'var(--color-cleared)' },
+  { status: 'In Progress', count: 0, fill: 'var(--color-progress)' },
+  { status: 'Action Required', count: 0, fill: 'var(--color-rejected)' },
+  { status: 'Not Started', count: 0, fill: 'var(--color-pending)' },
 ];
 
 const chartConfig = {
@@ -44,8 +44,14 @@ const chartConfig = {
 } satisfies import('@/components/ui/chart').ChartConfig;
 
 export function ClearanceChart() {
+  const noData = chartData.every((item) => item.count === 0);
   return (
     <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+      {noData ? (
+        <div className="flex h-[350px] w-full items-center justify-center text-muted-foreground">
+          No data available
+        </div>
+      ) : (
       <ResponsiveContainer width="100%" height={350}>
         <BarChart
           accessibilityLayer
@@ -78,6 +84,7 @@ export function ClearanceChart() {
           <Bar dataKey="count" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
+      )}
     </ChartContainer>
   );
 }
