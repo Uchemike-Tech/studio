@@ -29,9 +29,9 @@ export async function getSettings(): Promise<AppSettings> {
     if (insertError) {
       console.error('Error inserting default settings:', insertError.message);
       // If insertion fails, return the default object anyway to prevent app crash
-      return { id: 1, requiredDocuments: 6 };
+      return defaultSettings;
     }
-    return insertedData || { id: 1, requiredDocuments: 6 };
+    return insertedData || defaultSettings;
   }
 }
 
@@ -62,7 +62,6 @@ export async function getStudent(email: string): Promise<Student | undefined> {
 
   if (error && error.code !== 'PGRST116') {
       console.error(`Error getting student with email ${email}:`, error.message);
-      return undefined; // Explicitly return undefined on error
   }
   
   if (data) {
