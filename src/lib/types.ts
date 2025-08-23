@@ -5,7 +5,7 @@ export interface Document {
   status: 'Approved' | 'Pending' | 'Rejected';
   submittedAt: Date | string; // Allow string for Supabase dates
   updatedAt: Date | string; // Allow string for Supabase dates
-  fileUrl?: string; 
+  fileUrl?: string;
   analysis?: {
     summary: string;
     suggestedStatus: string;
@@ -15,7 +15,7 @@ export interface Document {
 export interface Student {
   id?: string; // The user's auth ID from Supabase
   name: string;
-  email: string;
+  email?: string;
   clearanceProgress: number;
   documents: Document[];
 }
