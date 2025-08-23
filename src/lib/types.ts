@@ -13,7 +13,8 @@ export interface Document {
 }
 
 export interface Student {
-  id: string; // The user's auth ID from Supabase (UUID)
+  id: number; // The auto-incrementing primary key (bigint)
+  auth_id: string; // The user's auth ID from Supabase (UUID)
   name: string;
   email: string;
   documents: Document[];

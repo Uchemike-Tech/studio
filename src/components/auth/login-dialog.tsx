@@ -37,28 +37,21 @@ export function LoginDialog({ userType }: LoginDialogProps) {
 
     try {
       // First, try to sign in
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (signInError) {
-        // If sign-in fails because the user doesn't exist, try to sign them up
-        if (signInError.message.includes('Invalid login credentials') || signInError.message.includes('User not found')) {
-          const { error: signUpError } = await supabase.auth.signUp({
-            email,
-            password,
-          });
+        // If sign-in fails, try to sign them up
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+        });
 
-          if (signUpError) {
-            // If sign-up also fails, throw the sign-up error
-            throw signUpError;
-          }
-          // On successful signup, Supabase now automatically signs the user in.
-          // The student record will be created on their first visit to the dashboard.
-        } else {
-          // If the sign-in error is something else, throw it
-          throw signInError;
+        if (signUpError) {
+          // If sign-up also fails, throw the sign-up error
+          throw signUpError;
         }
       }
 

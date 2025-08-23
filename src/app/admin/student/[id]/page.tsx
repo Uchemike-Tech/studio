@@ -22,12 +22,11 @@ import {
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { updateDocumentStatus, getSettings } from '@/lib/store';
+import { updateDocumentStatus, getSettings, getStudentById } from '@/lib/store';
 import type { Student, Document, AppSettings } from '@/lib/types';
 import { ArrowLeft, CheckCircle, Clock, XCircle, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from '@/components/ui/progress';
-import { supabase } from '@/lib/supabase-client';
 
 const statusIcons = {
   Approved: <CheckCircle className="h-4 w-4 text-green-600" />,
@@ -47,7 +46,7 @@ const statusColors: { [key in Document['status']]: string } = {
 export default function StudentDetailsPage() {
   const router = useRouter();
   const params = useParams();
-  const { id } = params;
+  const studentId = params.id ? Number(params.id) : null;
   const { toast } = useToast();
 
   const [student, setStudent] = useState<Student | null>(null);
@@ -55,12 +54,11 @@ export default function StudentDetailsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchStudentData = useCallback(async () => {
-    if (typeof id === 'string') {
+    if (studentId) {
       try {
-        const { data, error } = await supabase.from('students').select('*').eq('id', id).single();
-        if (error) throw error;
-        if (data) {
-          setStudent(data);
+        const studentData = await getStudentById(studentId);
+        if (studentData) {
+          setStudent(studentData);
         } else {
           toast({ title: 'Error', description: 'Student not found.', variant: 'destructive' });
         }
@@ -69,7 +67,7 @@ export default function StudentDetailsPage() {
         toast({ title: 'Error', description: 'Failed to load student details.', variant: 'destructive' });
       }
     }
-  }, [id, toast]);
+  }, [studentId, toast]);
 
 
   useEffect(() => {
@@ -80,16 +78,15 @@ export default function StudentDetailsPage() {
       await fetchStudentData();
       setIsLoading(false);
     }
-    if (id) {
+    if (studentId) {
         fetchData();
     }
-  }, [id, fetchStudentData]);
+  }, [studentId, fetchStudentData]);
 
   const handleStatusUpdate = async (docId: string, status: 'Approved' | 'Rejected') => {
-    if (typeof id === 'string') {
+    if (studentId) {
         try {
-            await updateDocumentStatus(id, docId, status);
-            // Refetch data to show the update
+            await updateDocumentStatus(studentId, docId, status);
             await fetchStudentData();
             toast({
               title: `Document ${status}`,

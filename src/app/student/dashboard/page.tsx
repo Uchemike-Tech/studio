@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { DocumentUploadForm } from './_components/document-upload-form';
 import Image from 'next/image';
-import { getStudent, updateStudent, getSettings, createStudent } from '@/lib/store';
+import { getStudentByAuthId, updateStudent, getSettings, createStudent } from '@/lib/store';
 import { ViewDocumentDialog } from './_components/view-document-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase-client';
@@ -76,22 +76,17 @@ export default function StudentDashboardPage() {
         }
         const user = session.user;
 
-        // First, fetch the global app settings
         const settingsData = await getSettings();
         setSettings(settingsData);
         
-        // Then, try to get the student record using their auth ID
-        let studentData = await getStudent(user.id);
+        let studentData = await getStudentByAuthId(user.id);
         
-        // If no student record exists, create one
         if (!studentData) {
             toast({
                 title: "Welcome!",
                 description: "Creating your student profile..."
             });
-            // Create the student record and wait for it to complete
-            const newStudent = await createStudent(user.id, user.email!);
-            studentData = newStudent;
+            studentData = await createStudent(user.id, user.email!);
         }
         
         setStudent(studentData || null);
@@ -247,7 +242,7 @@ export default function StudentDashboardPage() {
           </CardHeader>
           <CardContent>
             <DocumentUploadForm
-              studentId={student.id!}
+              studentId={student.auth_id}
               onDocumentUpload={handleDocumentUpload}
             />
           </CardContent>
