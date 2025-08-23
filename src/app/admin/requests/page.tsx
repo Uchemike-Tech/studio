@@ -28,7 +28,6 @@ import { cn } from '@/lib/utils';
 
 interface PendingDocument extends Document {
   studentId: number;
-  studentAuthId: string;
   studentName: string;
 }
 
@@ -62,7 +61,6 @@ export default function AdminRequestsPage() {
               .map((doc) => ({
                 ...doc,
                 studentId: student.id,
-                studentAuthId: student.auth_id,
                 studentName: student.name,
               }))
           )
@@ -127,7 +125,7 @@ export default function AdminRequestsPage() {
                         <TableCell>
                           <div className="font-medium">{doc.studentName}</div>
                           <div className="hidden text-sm text-muted-foreground md:inline">
-                            {doc.studentAuthId}
+                            ID: {doc.studentId}
                           </div>
                         </TableCell>
                         <TableCell>{doc.name}</TableCell>
