@@ -43,9 +43,9 @@ const statusColors: { [key in Document['status']]: string } = {
     'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/50 dark:text-red-300 dark:border-red-800',
 };
 
-export default function StudentDetailsPage({ params }: { params: { id: string } }) {
+export default function StudentDetailsPage({ params: { id } }: { params: { id: string } }) {
   const router = useRouter();
-  const studentId = params.id ? Number(params.id) : null;
+  const studentId = Number(id);
   const { toast } = useToast();
 
   const [student, setStudent] = useState<Student | null>(null);
