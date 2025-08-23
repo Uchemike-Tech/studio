@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { DashboardLayout } from '@/components/dashboard/layout';
 import { Button } from '@/components/ui/button';
 import {
@@ -43,9 +43,8 @@ const statusColors: { [key in Document['status']]: string } = {
     'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/50 dark:text-red-300 dark:border-red-800',
 };
 
-export default function StudentDetailsPage() {
+export default function StudentDetailsPage({ params }: { params: { id: string } }) {
   const router = useRouter();
-  const params = useParams();
   const studentId = params.id ? Number(params.id) : null;
   const { toast } = useToast();
 
