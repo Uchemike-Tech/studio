@@ -21,6 +21,8 @@ import { useToast } from '@/hooks/use-toast';
 import { getSettings, updateSettings } from '@/lib/store';
 import type { AppSettings } from '@/lib/types';
 
+export const dynamic = 'force-dynamic';
+
 const settingsSchema = z.object({
   requiredDocuments: z.coerce
     .number()
