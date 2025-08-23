@@ -1,6 +1,7 @@
 
 import { supabase } from './supabase-client';
 import type { Student, Document, AppSettings } from './types';
+import { mockStudent } from './mock-data';
 
 // --- Settings ---
 export async function getSettings(): Promise<AppSettings> {
@@ -10,20 +11,12 @@ export async function getSettings(): Promise<AppSettings> {
     .eq('id', 1)
     .single();
 
-  // If we get data, return it.
-  if (data) {
-    return data;
-  }
-
   if (error && error.code !== 'PGRST116') { // PGRST116 means "object not found"
-    // Log any other errors, but don't crash the app.
     console.error('Error fetching settings:', error.message || 'An unknown error occurred');
   }
 
-  // If no data is found or an error occurs, return a safe default.
-  // The admin settings page is responsible for creating/updating the actual record in the DB.
-  const defaultSettings: AppSettings = { id: 1, requiredDocuments: 6 };
-  return defaultSettings;
+  // If we get data, return it. If not, return a safe default.
+  return data || { id: 1, requiredDocuments: 6 };
 }
 
 export async function updateSettings(newSettings: AppSettings): Promise<void> {
@@ -39,20 +32,20 @@ export async function updateSettings(newSettings: AppSettings): Promise<void> {
 }
 
 // --- Students ---
-export async function getStudent(email: string): Promise<Student | undefined> {
-  if (!email) {
-    console.error('getStudent called with no email.');
+export async function getStudent(id: string): Promise<Student | undefined> {
+  if (!id) {
+    console.error('getStudent called with no ID.');
     return undefined;
   }
   
   const { data, error } = await supabase
     .from('students')
     .select('*')
-    .eq('email', email)
+    .eq('id', id)
     .single();
 
   if (error && error.code !== 'PGRST116') {
-      console.error(`Error getting student with email ${email}:`, error.message);
+      console.error(`Error getting student with ID ${id}:`, error.message);
   }
   
   if (data) {
@@ -65,14 +58,33 @@ export async function getStudent(email: string): Promise<Student | undefined> {
   return undefined; // Explicitly return undefined if no data
 }
 
+
+export async function createStudent(id: string, email: string): Promise<Student | undefined> {
+  const newStudentData = {
+    ...mockStudent,
+    id,
+    email,
+  };
+  const { data, error } = await supabase.from('students').insert(newStudentData).select().single();
+
+  if(error) {
+    console.error('Error creating student record:', error);
+    throw error;
+  }
+
+  return data as Student;
+}
+
+
 export async function updateStudent(student: Student): Promise<void> {
-    if (!student.email) {
-      console.error("updateStudent called without a student email.");
+    if (!student.id) {
+      console.error("updateStudent called without a student id.");
       return;
     }
     const { error } = await supabase
       .from('students')
-      .upsert(student, { onConflict: 'email' }); // Use email for conflict resolution
+      .update(student)
+      .eq('id', student.id);
 
     if (error) {
         console.error('Error updating student:', error);

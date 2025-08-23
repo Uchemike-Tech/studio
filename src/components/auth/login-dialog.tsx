@@ -18,7 +18,6 @@ import { LogIn } from 'lucide-react';
 import React from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase-client';
-import { mockStudent } from '@/lib/mock-data';
 
 interface LoginDialogProps {
   userType: 'student' | 'admin';
@@ -44,9 +43,9 @@ export function LoginDialog({ userType }: LoginDialogProps) {
       });
 
       if (signInError) {
-        // If sign-in fails because the user doesn't exist, try to sign them up
+        // If sign-in fails, try to sign them up
         if (signInError.message.includes('Invalid login credentials')) {
-          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          const { error: signUpError } = await supabase.auth.signUp({
             email,
             password,
           });
@@ -55,24 +54,9 @@ export function LoginDialog({ userType }: LoginDialogProps) {
             // If sign-up also fails, throw the sign-up error
             throw signUpError;
           }
-          
-          if (!signUpData.user) {
-            throw new Error("Sign up successful, but no user data returned. Please check your Supabase email confirmation settings.")
-          }
-          
-          // If this is the demo student, create their record in the database
-          if (userType === 'student' && signUpData.user?.email) {
-              const { error: upsertError } = await supabase.from('students').upsert({
-                ...mockStudent,
-                id: signUpData.user.id, // Use the auth user's ID
-                email: signUpData.user.email, // Use the auth user's email
-              }, { onConflict: 'email' });
-
-              if (upsertError) {
-                  console.error("Failed to create student record:", upsertError);
-                  throw new Error("Could not create the initial student record.");
-              }
-          }
+          // On successful signup, Supabase now automatically signs the user in,
+          // so we can proceed directly to the dashboard.
+          // The dashboard itself will handle creating the student record on first visit.
 
         } else {
           // If the sign-in error is not "Invalid login credentials", throw it

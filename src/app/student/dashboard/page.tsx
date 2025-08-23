@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 import { DocumentUploadForm } from './_components/document-upload-form';
 import Image from 'next/image';
-import { getStudent, updateStudent, getSettings } from '@/lib/store';
+import { getStudent, updateStudent, getSettings, createStudent } from '@/lib/store';
 import { ViewDocumentDialog } from './_components/view-document-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/lib/supabase-client';
@@ -64,7 +64,7 @@ export default function StudentDashboardPage() {
     async function fetchInitialData() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session || !session.user.email) {
+        if (!session || !session.user) {
             toast({
                 title: 'Not Authenticated',
                 description: 'You must be logged in to view this page.',
@@ -73,15 +73,25 @@ export default function StudentDashboardPage() {
             setIsLoading(false);
             return;
         }
-        const userEmail = session.user.email;
+        const user = session.user;
 
-        const [studentData, settingsData] = await Promise.all([
-          getStudent(userEmail),
-          getSettings(),
-        ]);
+        // First, fetch the global app settings
+        const settingsData = await getSettings();
+        setSettings(settingsData);
+        
+        // Then, try to get the student record
+        let studentData = await getStudent(user.id);
+        
+        // If no student record exists, create one
+        if (!studentData) {
+            toast({
+                title: "Welcome!",
+                description: "Creating your student profile..."
+            });
+            studentData = await createStudent(user.id, user.email!);
+        }
         
         setStudent(studentData || null);
-        setSettings(settingsData);
         
       } catch (error) {
         console.error('Failed to fetch initial data:', error);
