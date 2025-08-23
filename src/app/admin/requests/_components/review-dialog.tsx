@@ -39,7 +39,7 @@ export function ReviewDocumentDialog({
 
   const handleViewDocument = () => {
     if (document.fileUrl) {
-      window.open(document.fileUrl, '_blank');
+      window.open(document.fileUrl, '_blank', 'noopener,noreferrer');
     }
   };
 
@@ -61,7 +61,7 @@ export function ReviewDocumentDialog({
                 <p className="font-medium text-sm">Submitted At</p>
                 <p className="text-muted-foreground">{new Date(document.submittedAt).toLocaleString()}</p>
             </div>
-             <Button variant="outline" className="w-full" onClick={handleViewDocument}>
+             <Button variant="outline" className="w-full" onClick={handleViewDocument} disabled={!document.fileUrl}>
                 <Eye className="mr-2" /> View Submitted File
             </Button>
             {document.analysis && (
