@@ -1,4 +1,4 @@
-# PROJECT WORK FOR FUTO SITE
+# PROJECT WORK FOR FUTO SITE main
 
 to install all requirements do npm install.
 to run locally do npm run dev.
